@@ -5,6 +5,7 @@ import SignatureComponent from "~/components/SignatureComponent";
 import PdfMerger from "~/components/PdfMerger";
 import EmailSender from "~/components/EmailSender";
 import EmailEditor from "~/components/EmailEditor";
+import ImageWithTextOverlay from "~/components/ImageWithTextOverlay";
 
 export default function Main() {
   const [activeSignature, setActiveSignature] = useState<string | null>(null);
@@ -45,7 +46,8 @@ export default function Main() {
             Coleção de ferramentas úteis para assinatura digital, PDF e email
           </p>
         </div>
-
+        {/* Projeto completo */}
+        <ImageWithTextOverlay />
         {/* Grid de Componentes */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           <LiveForm onFormSubmit={handleFormSubmit} />
