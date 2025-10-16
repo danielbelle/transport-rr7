@@ -46,6 +46,14 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  // Ignora erros de rotas específicas de devtools
+  const pathname =
+    typeof window !== "undefined" ? window.location.pathname : "";
+
+  if (pathname.includes(".well-known/appspecific/com.chrome.devtools")) {
+    return null; // Silenciosamente ignora
+  }
+
   let message = "Oops!";
   let details = "An unexpected error occurred.";
   let stack: string | undefined;

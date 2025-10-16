@@ -5,3 +5,9 @@
 # React Router
 /.react-router/
 /build/
+
+.react-router/*
+tree.txt
+export.mjs
+export.md
+pnpm-lock.yaml
