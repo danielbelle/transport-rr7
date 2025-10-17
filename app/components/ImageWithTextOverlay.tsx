@@ -12,14 +12,28 @@ interface TextOverlay {
 const ImageWithTextOverlay = () => {
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
   const [currentText, setCurrentText] = useState("");
-  const [fontSize, setFontSize] = useState(16);
-  const [textColor, setTextColor] = useState("#000000");
   const [isAddingText, setIsAddingText] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Carregar imagem de sample-pdf.jpg
-  const imageUrl = "/samples/sample-pdf.jpg";
+  // Carregar imagem de sample.png
+  const imageUrl = "/samples/sample750.png";
+  const canvasWidth = 750;
+  const canvasHeight = 750;
+  const fontSize = 12;
+  const textColor = "#000000";
+  const timeDebounce = 500;
+
+  useEffect(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = setTimeout(() => {
+      canvasWrite();
+    }, timeDebounce);
+  }, [currentText]);
 
   useEffect(() => {
     drawCanvas();
@@ -48,15 +62,17 @@ const ImageWithTextOverlay = () => {
     });
   };
 
-  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isAddingText || !currentText.trim()) return;
+  const canvasWrite = () => {
+    if (!currentText || currentText.trim() === "") return;
 
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const points = {
+      text_nome: { x: 123, y: 131 },
+      text_rg: { x: 261, y: 168 },
+      text_cpf: { x: 100, y: 206 },
+    };
 
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = points.text_rg.x;
+    const y = points.text_rg.y;
 
     const newOverlay: TextOverlay = {
       id: Date.now().toString(),
@@ -68,12 +84,6 @@ const ImageWithTextOverlay = () => {
     };
 
     setTextOverlays((prev) => [...prev, newOverlay]);
-    setCurrentText("");
-    setIsAddingText(false);
-  };
-
-  const handleAddTextClick = () => {
-    setIsAddingText(true);
   };
 
   const removeTextOverlay = (id: string) => {
@@ -116,55 +126,6 @@ const ImageWithTextOverlay = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Tamanho da Fonte
-              </label>
-              <input
-                type="number"
-                value={fontSize}
-                onChange={(e) => setFontSize(Number(e.target.value))}
-                min="8"
-                max="72"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Cor do Texto
-              </label>
-              <input
-                type="color"
-                value={textColor}
-                onChange={(e) => setTextColor(e.target.value)}
-                className="w-full h-10 px-1 py-1 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={handleAddTextClick}
-              disabled={!currentText.trim()}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-2 px-4 rounded-md font-medium transition-colors"
-            >
-              {isAddingText
-                ? "Clique na imagem para posicionar"
-                : "Adicionar Texto"}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsAddingText(false)}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md font-medium transition-colors"
-            >
-              Cancelar
-            </button>
-          </div>
-
           <button
             type="button"
             onClick={downloadImage}
@@ -187,7 +148,7 @@ const ImageWithTextOverlay = () => {
                     className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-900 rounded-md"
                   >
                     <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
-                      "{overlay.text}"
+                      "{overlay.text} - ({overlay.x}, {overlay.y})"
                     </span>
                     <button
                       onClick={() => removeTextOverlay(overlay.id)}
@@ -221,25 +182,15 @@ const ImageWithTextOverlay = () => {
             {/* Canvas para desenho */}
             <canvas
               ref={canvasRef}
-              width={600}
-              height={400}
-              onClick={handleCanvasClick}
+              width={canvasWidth}
+              height={canvasHeight}
               className="w-full h-auto max-w-full border border-gray-200 dark:border-gray-600 cursor-crosshair"
-              style={{
-                cursor: isAddingText ? "crosshair" : "default",
-              }}
             />
-
-            {isAddingText && (
-              <div className="absolute top-2 left-2 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-3 py-1 rounded-md text-sm">
-                Clique na imagem para posicionar o texto
-              </div>
-            )}
           </div>
 
           <div className="text-sm text-gray-500 dark:text-gray-400">
             <p>
-              Imagem base: <strong>sample-pdf.jpg</strong>
+              Imagem base: <strong>{imageUrl}</strong>
             </p>
             <p>
               Textos adicionados: <strong>{textOverlays.length}</strong>
