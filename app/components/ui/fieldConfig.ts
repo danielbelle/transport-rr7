@@ -1,0 +1,34 @@
+import type { FieldConfig } from "~/components/types/types";
+
+export const fieldConfig: FieldConfig[] = [
+  {
+    key: "text_nome",
+    label: "Nome Completo",
+    placeholder: "Digite seu nome completo",
+    type: "text",
+    font: 14,
+    x: 123,
+    y: 131,
+    required: true,
+  },
+  {
+    key: "text_rg",
+    label: "RG",
+    placeholder: "Digite seu RG",
+    type: "number",
+    font: 14,
+    x: 261,
+    y: 168,
+    required: true,
+  },
+  {
+    key: "text_cpf",
+    label: "CPF",
+    placeholder: "Digite seu CPF",
+    type: "number",
+    font: 16,
+    x: 100,
+    y: 206,
+    required: true,
+  },
+];

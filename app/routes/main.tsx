@@ -1,6 +1,5 @@
 import { useState } from "react";
 import type { Route } from "./+types/main";
-import LiveForm from "~/components/LiveForm";
 import SignatureComponent from "~/components/SignatureComponent";
 import PdfMerger from "~/components/PdfMerger";
 import EmailSender from "~/components/EmailSender";
@@ -9,10 +8,6 @@ import ImageWithTextOverlay from "~/components/ImageWithTextOverlay";
 
 export default function Main() {
   const [activeSignature, setActiveSignature] = useState<string | null>(null);
-
-  const handleFormSubmit = (data: any) => {
-    console.log("Formulário enviado:", data);
-  };
 
   const handleSignatureChange = (signatureData: string | null) => {
     setActiveSignature(signatureData);
@@ -50,8 +45,6 @@ export default function Main() {
         <ImageWithTextOverlay />
         {/* Grid de Componentes */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          <LiveForm onFormSubmit={handleFormSubmit} />
-
           <SignatureComponent onSignatureChange={handleSignatureChange} />
 
           <PdfMerger onPdfMerge={handlePdfMerge} />
