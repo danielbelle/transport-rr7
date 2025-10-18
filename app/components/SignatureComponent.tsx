@@ -1,9 +1,6 @@
 import { useRef, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
-
-interface SignatureComponentProps {
-  onSignatureChange?: (signatureData: string | null) => void;
-}
+import type { SignatureComponentProps } from "~/components/types";
 
 export default function SignatureComponent({
   onSignatureChange,
@@ -12,14 +9,16 @@ export default function SignatureComponent({
   const [signatureData, setSignatureData] = useState<string | null>(null);
 
   const handleSignatureEnd = () => {
-    if (signatureRef.current && !signatureRef.current.isEmpty()) {
-      const dataUrl = signatureRef.current.toDataURL();
-      setSignatureData(dataUrl);
-      onSignatureChange?.(dataUrl);
-    } else {
+    const canvas = signatureRef.current;
+    if (!canvas || canvas.isEmpty()) {
       setSignatureData(null);
       onSignatureChange?.(null);
+      return;
     }
+
+    const dataUrl = canvas.toDataURL();
+    setSignatureData(dataUrl);
+    onSignatureChange?.(dataUrl);
   };
 
   const handleClearSignature = () => {

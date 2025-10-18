@@ -1,12 +1,5 @@
-import React, { useRef, useEffect } from "react";
-import type { TextOverlay } from "~/components/types/types";
-
-interface CanvasPreviewProps {
-  imageUrl: string;
-  canvasWidth: number;
-  canvasHeight: number;
-  textOverlays: TextOverlay[];
-}
+import React, { useRef, useEffect, useState } from "react";
+import type { CanvasPreviewProps } from "~/components/types";
 
 export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
   imageUrl,
@@ -15,17 +8,30 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
   textOverlays,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imageRef = useRef<HTMLImageElement>(null);
+  const backgroundImageRef = useRef<HTMLImageElement | null>(null);
+  const [isBackgroundLoaded, setIsBackgroundLoaded] = useState(false);
 
+  // Carregar imagem de fundo uma vez
   useEffect(() => {
-    drawCanvas();
-  }, [textOverlays]);
+    const img = new Image();
+    img.onload = () => {
+      backgroundImageRef.current = img;
+      setIsBackgroundLoaded(true);
+      drawCanvas();
+    };
+    img.src = imageUrl;
+  }, [imageUrl]);
+
+  // Redesenhar quando overlays mudarem
+  useEffect(() => {
+    if (isBackgroundLoaded) {
+      drawCanvas();
+    }
+  }, [textOverlays, isBackgroundLoaded]);
 
   const drawCanvas = () => {
     const canvas = canvasRef.current;
-    const image = imageRef.current;
-
-    if (!canvas || !image) return;
+    if (!canvas || !backgroundImageRef.current) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -33,12 +39,27 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
     // Limpar canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Desenhar imagem
-    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    // Desenhar imagem de fundo
+    ctx.drawImage(
+      backgroundImageRef.current,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
 
-    // Desenhar textos
+    // Desenhar textos e assinaturas
     textOverlays.forEach((overlay) => {
-      if (overlay.text && overlay.text.trim() !== "") {
+      if (overlay.type === "signature" && overlay.imageData) {
+        // Criar imagem para a assinatura
+        const signatureImg = new Image();
+        signatureImg.onload = () => {
+          // Redesenhar o canvas quando a imagem da assinatura carregar
+          ctx.drawImage(signatureImg, overlay.x, overlay.y, 300, 100);
+        };
+        signatureImg.src = overlay.imageData;
+      } else if (overlay.text && overlay.text.trim() !== "") {
+        // Desenhar texto normal
         ctx.font = `${overlay.fontSize}px Arial`;
         ctx.fillStyle = overlay.color;
         ctx.fillText(overlay.text, overlay.x, overlay.y);
@@ -53,8 +74,6 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
       </h3>
 
       <div className="relative border-2 border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 p-4">
-        <img ref={imageRef} src={imageUrl} alt="Base" className="hidden" />
-
         <canvas
           ref={canvasRef}
           width={canvasWidth}
@@ -68,7 +87,16 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
           Imagem base: <strong>{imageUrl}</strong>
         </p>
         <p>
-          Textos adicionados: <strong>{textOverlays.length}</strong>
+          Textos:
+          <strong>
+            {textOverlays.filter((o) => o.type === "text").length}
+          </strong>
+        </p>
+        <p>
+          Assinaturas:
+          <strong>
+            {textOverlays.filter((o) => o.type === "signature").length}
+          </strong>
         </p>
       </div>
     </div>

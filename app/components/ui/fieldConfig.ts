@@ -1,4 +1,4 @@
-import type { FieldConfig } from "~/components/types/types";
+import type { FieldConfig } from "~/components/types";
 
 export const fieldConfig: FieldConfig[] = [
   {
@@ -29,6 +29,18 @@ export const fieldConfig: FieldConfig[] = [
     font: 16,
     x: 100,
     y: 206,
+    required: true,
+  },
+  {
+    key: "signature",
+    label: "Assinatura",
+    placeholder: "Clique para assinar",
+    type: "signature",
+    font: 0,
+    x: 250,
+    y: 500,
+    width: 600,
+    height: 150,
     required: true,
   },
 ];

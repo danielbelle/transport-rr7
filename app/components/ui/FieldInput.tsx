@@ -1,17 +1,19 @@
 import React from "react";
-import type { FieldConfig, FormData } from "~/components/types/types";
-
-interface FieldInputProps {
-  field: FieldConfig;
-  formData: FormData;
-  onChange: (fieldKey: string, value: string) => void;
-}
+import { SignatureField } from "~/components/ui/SignatureField";
+import type { FieldInputProps } from "~/components/types";
 
 export const FieldInput: React.FC<FieldInputProps> = ({
   field,
   formData,
   onChange,
+  onSignatureChange,
 }) => {
+  if (field.type === "signature") {
+    return (
+      <SignatureField field={field} onSignatureChange={onSignatureChange} />
+    );
+  }
+
   return (
     <div key={field.key}>
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
