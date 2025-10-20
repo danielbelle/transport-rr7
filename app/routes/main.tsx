@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { Route } from "./+types/main";
 import PdfMerger from "~/components/PdfMerger";
 import EmailSender from "~/components/EmailSender";
@@ -7,18 +6,12 @@ import LiveForm from "~/components/LiveForm";
 import { devLog } from "~/utils/dev-log";
 
 export default function Main() {
-  const [activeSignature, setActiveSignature] = useState<string | null>(null);
-
   const handlePdfMerge = (mergedPdfBytes: Uint8Array) => {
     devLog.log("PDFs mesclados:", mergedPdfBytes);
   };
 
   const handleEmailSent = (result: any) => {
     devLog.log("Email enviado:", result);
-  };
-
-  const handleEmailUpdate = (emailData: any) => {
-    devLog.log("Email atualizado:", emailData);
   };
 
   return (
@@ -33,9 +26,8 @@ export default function Main() {
             Coleção de ferramentas úteis para assinatura digital, PDF e email
           </p>
         </div>
-        {/* Projeto completo 
+        {/* Projeto completo  */}
         <ImageWithTextOverlay />
-        */}
 
         <LiveForm />
         {/* Grid de Componentes */}
