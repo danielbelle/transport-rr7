@@ -5,6 +5,7 @@ import SignatureComponent from "~/components/SignatureComponent";
 import PdfMerger from "~/components/PdfMerger";
 import EmailSender from "~/components/EmailSender";
 import EmailEditor from "~/components/EmailEditor";
+import { devLog } from "~/utils/dev-log";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -21,27 +22,27 @@ export default function Home() {
   const [activeSignature, setActiveSignature] = useState<string | null>(null);
 
   const handleFormSubmit = (data: any) => {
-    console.log("Formulário enviado:", data);
+    devLog.log("Formulário enviado:", data);
   };
 
   const handleSignatureChange = (signatureData: string | null) => {
     setActiveSignature(signatureData);
-    console.log(
+    devLog.log(
       "Assinatura atualizada:",
       signatureData ? "Assinatura presente" : "Assinatura limpa"
     );
   };
 
   const handlePdfMerge = (mergedPdfBytes: Uint8Array) => {
-    console.log("PDFs mesclados:", mergedPdfBytes);
+    devLog.log("PDFs mesclados:", mergedPdfBytes);
   };
 
   const handleEmailSent = (result: any) => {
-    console.log("Email enviado:", result);
+    devLog.log("Email enviado:", result);
   };
 
   const handleEmailUpdate = (emailData: any) => {
-    console.log("Email atualizado:", emailData);
+    devLog.log("Email atualizado:", emailData);
   };
 
   return (

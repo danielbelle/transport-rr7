@@ -1,32 +1,24 @@
 import { useState } from "react";
 import type { Route } from "./+types/main";
-import SignatureComponent from "~/components/SignatureComponent";
 import PdfMerger from "~/components/PdfMerger";
 import EmailSender from "~/components/EmailSender";
-import EmailEditor from "~/components/EmailEditor";
 import ImageWithTextOverlay from "~/components/ImageWithTextOverlay";
+import LiveForm from "~/components/LiveForm";
+import { devLog } from "~/utils/dev-log";
 
 export default function Main() {
   const [activeSignature, setActiveSignature] = useState<string | null>(null);
 
-  const handleSignatureChange = (signatureData: string | null) => {
-    setActiveSignature(signatureData);
-    console.log(
-      "Assinatura atualizada:",
-      signatureData ? "Assinatura presente" : "Assinatura limpa"
-    );
-  };
-
   const handlePdfMerge = (mergedPdfBytes: Uint8Array) => {
-    console.log("PDFs mesclados:", mergedPdfBytes);
+    devLog.log("PDFs mesclados:", mergedPdfBytes);
   };
 
   const handleEmailSent = (result: any) => {
-    console.log("Email enviado:", result);
+    devLog.log("Email enviado:", result);
   };
 
   const handleEmailUpdate = (emailData: any) => {
-    console.log("Email atualizado:", emailData);
+    devLog.log("Email atualizado:", emailData);
   };
 
   return (
@@ -41,59 +33,19 @@ export default function Main() {
             Coleção de ferramentas úteis para assinatura digital, PDF e email
           </p>
         </div>
-        {/* Projeto completo */}
+        {/* Projeto completo 
         <ImageWithTextOverlay />
+        */}
+
+        <LiveForm />
         {/* Grid de Componentes */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          <SignatureComponent onSignatureChange={handleSignatureChange} />
-
           <PdfMerger onPdfMerge={handlePdfMerge} />
 
           <EmailSender
             defaultRecipient="henrique.danielb@gmail.com"
             onEmailSent={handleEmailSent}
           />
-
-          <EmailEditor onEmailUpdate={handleEmailUpdate} />
-
-          {/* Card de Status */}
-          <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              Status do Sistema
-            </h2>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700 dark:text-gray-300">
-                  Assinatura:
-                </span>
-                <span
-                  className={`px-2 py-1 rounded text-xs font-medium ${
-                    activeSignature
-                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                  }`}
-                >
-                  {activeSignature ? "Presente" : "Não definida"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700 dark:text-gray-300">
-                  API Email:
-                </span>
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded text-xs font-medium">
-                  Configurada
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700 dark:text-gray-300">
-                  PDF Library:
-                </span>
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded text-xs font-medium">
-                  Ativa
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
