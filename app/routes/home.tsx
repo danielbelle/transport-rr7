@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Route } from "./+types/main";
 import Form from "~/components/Form";
 import PdfLive from "~/components/PdfLive";
+import ImageLive from "~/components/ImageLive";
 import type { FormData } from "~/components/types";
 
 export default function Home() {
@@ -21,19 +22,25 @@ export default function Home() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Editor de Declaração PDF
+            Editor Multiplataforma
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Preencha o formulário e veja o PDF atualizar em tempo real
+            Preencha o formulário e veja PDF e Imagem atualizarem em tempo real
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Formulário */}
+        {/* Formulário */}
+        <div className="mb-6">
           <Form onFormDataChange={handleFormDataChange} />
+        </div>
 
+        {/* Visualizações em Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Visualização do PDF */}
           <PdfLive formData={formData} />
+
+          {/* Visualização da Imagem */}
+          <ImageLive formData={formData} />
         </div>
       </div>
     </div>

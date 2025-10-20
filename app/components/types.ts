@@ -75,3 +75,7 @@ export interface PdfLiveProps {
   formData: FormData;
   onPdfGenerated?: (pdfUrl: string) => void;
 }
+export interface ImageLiveProps {
+  formData: FormData;
+  onImageGenerated?: (imageUrl: string) => void;
+}

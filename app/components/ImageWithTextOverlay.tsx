@@ -6,12 +6,16 @@ import type { TextOverlay, FormData } from "~/components/types";
 
 const ImageWithTextOverlay = () => {
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
-  const [formData, setFormData] = useState<FormData>({});
   const [signatures, setSignatures] = useState<{ [key: string]: string }>({});
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const signatureUpdateRef = useRef<number>(0);
 
   const visibleFields = fieldConfig.filter((field) => !field.hidden);
+  const [formData, setFormData] = useState<FormData>({
+    text_nome: "",
+    text_rg: "",
+    text_cpf: "",
+  });
 
   // Configurações
   const imageUrl = "/samples/sample750.png";
@@ -79,7 +83,7 @@ const ImageWithTextOverlay = () => {
           const imageData = signatures[field.key];
           return imageData ? createSignatureOverlay(field, imageData) : null;
         }
-        const value = formData[field.key] || "";
+        const value = formData[field.key as keyof FormData] || "";
         return value.trim() ? createTextOverlay(field, value) : null;
       })
       .filter(Boolean) as TextOverlay[];
@@ -164,7 +168,11 @@ const ImageWithTextOverlay = () => {
 
   const clearAllTexts = () => {
     setTextOverlays([]);
-    setFormData({});
+    setFormData({
+      text_nome: "",
+      text_rg: "",
+      text_cpf: "",
+    });
     setSignatures({});
     signatureUpdateRef.current = 0;
   };
