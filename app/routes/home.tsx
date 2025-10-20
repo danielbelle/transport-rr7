@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import type { Route } from "./+types/main";
 import Form from "~/components/Form";
 import PdfLive from "~/components/PdfLive";
 import ImageLive from "~/components/ImageLive";
-import type { FormData } from "~/components/types";
+import PdfMergeWithForm from "~/components/PdfMergeWithForm";
+import type { FormData, PdfLiveRef } from "~/components/types";
 
 export default function Home() {
   const [formData, setFormData] = useState<FormData>({
@@ -12,9 +13,14 @@ export default function Home() {
     text_cpf: "",
   });
 
+  const pdfLiveRef = useRef<PdfLiveRef>(null);
+
   const handleFormDataChange = (data: FormData) => {
-    console.log("Dados do formulário atualizados:", data);
     setFormData(data);
+  };
+
+  const getCurrentPdfBytes = (): Uint8Array | null => {
+    return pdfLiveRef.current?.getCurrentPdfBytes() || null;
   };
 
   return (
@@ -35,12 +41,17 @@ export default function Home() {
         </div>
 
         {/* Visualizações em Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Visualização do PDF */}
-          <PdfLive formData={formData} />
+          <PdfLive ref={pdfLiveRef} formData={formData} />
 
           {/* Visualização da Imagem */}
           <ImageLive formData={formData} />
+        </div>
+
+        {/* Mesclador de PDFs */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <PdfMergeWithForm formPdfBytes={getCurrentPdfBytes()} />
         </div>
       </div>
     </div>
@@ -49,10 +60,11 @@ export default function Home() {
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Editor de PDF - T-App" },
+    { title: "Editor Multiplataforma - T-App" },
     {
       name: "description",
-      content: "Preencha formulários e veja o PDF atualizar em tempo real",
+      content:
+        "Preencha formulários e veja PDF e Imagem atualizarem em tempo real",
     },
   ];
 }

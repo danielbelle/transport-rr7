@@ -79,3 +79,9 @@ export interface ImageLiveProps {
   formData: FormData;
   onImageGenerated?: (imageUrl: string) => void;
 }
+export interface PdfMergeWithFormProps {
+  formPdfBytes: Uint8Array | null;
+}
+export interface PdfLiveRef {
+  getCurrentPdfBytes: () => Uint8Array | null;
+}
