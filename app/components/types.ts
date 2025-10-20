@@ -19,6 +19,7 @@ export interface TextOverlay {
  */
 export interface FieldConfig {
   key: string;
+  name: string;
   label: string;
   placeholder: string;
   type: "text" | "number" | "email" | "tel" | "date" | "signature";
@@ -35,7 +36,9 @@ export interface FieldConfig {
  * Componente de formulário
  */
 export interface FormData {
-  [key: string]: string;
+  text_nome: string;
+  text_rg: string;
+  text_cpf: string;
 }
 
 /**
@@ -62,4 +65,13 @@ export interface CanvasPreviewProps {
   canvasWidth: number;
   canvasHeight: number;
   textOverlays: TextOverlay[];
+}
+
+export interface FormProps {
+  onFormDataChange?: (data: FormData) => void;
+  initialData?: FormData;
+}
+export interface PdfLiveProps {
+  formData: FormData;
+  onPdfGenerated?: (pdfUrl: string) => void;
 }
