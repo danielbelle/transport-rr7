@@ -66,7 +66,7 @@ export const SignatureField: React.FC<SignatureFieldProps> = ({
       </div>
 
       <div className="text-xs text-gray-500 dark:text-gray-400">
-        Posição na imagem: ({field.x}, {field.y}) | Tamanho:{" "}
+        Posição na imagem: ({field.x}, {field.y}) | Tamanho:
         {field.width || 100}x{field.height || 100}
       </div>
     </div>

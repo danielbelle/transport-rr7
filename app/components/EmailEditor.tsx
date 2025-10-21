@@ -150,7 +150,7 @@ export default function EmailEditor({ onEmailUpdate }: EmailEditorProps) {
                 <strong>Para:</strong> {emailData.to || "[Não definido]"}
               </div>
               <div>
-                <strong>Assunto:</strong>{" "}
+                <strong>Assunto:</strong>
                 {emailData.subject || "[Não definido]"}
               </div>
               <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">

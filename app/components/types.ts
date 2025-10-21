@@ -79,9 +79,31 @@ export interface ImageLiveProps {
   formData: FormData;
   onImageGenerated?: (imageUrl: string) => void;
 }
-export interface PdfMergeWithFormProps {
-  formPdfBytes: Uint8Array | null;
-}
+
 export interface PdfLiveRef {
   getCurrentPdfBytes: () => Uint8Array | null;
+}
+export interface EmailWithPdfProps {
+  formPdfBytes: Uint8Array | null;
+  formData: FormData;
+}
+
+export interface PdfMergeWithFormRef {
+  performMerge: () => Promise<Uint8Array | null>;
+  getMergedPdfBytes: () => Uint8Array | null;
+  hasUploadedFile: () => boolean;
+  setOnFileChange?: (callback: (hasFile: boolean) => void) => void;
+}
+
+export interface PdfMergeWithFormProps {
+  formPdfBytes: Uint8Array | null;
+  onMergeComplete?: (mergedPdfBytes: Uint8Array) => void;
+  onFileSelectionChange?: (hasFile: boolean) => void;
+}
+
+export interface EmailSenderProps {
+  pdfBytes: Uint8Array | null;
+  formData: FormData;
+  onEmailSent?: (pdfBytes: Uint8Array) => void;
+  pdfMergeRef?: React.RefObject<PdfMergeWithFormRef | null>;
 }

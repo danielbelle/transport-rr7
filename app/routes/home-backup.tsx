@@ -3,7 +3,7 @@ import type { Route } from "./+types/home";
 import LiveForm from "~/components/LiveForm";
 import SignatureComponent from "~/components/SignatureComponent";
 import PdfMerger from "~/components/PdfMerger";
-import EmailSender from "~/components/EmailSender";
+import EmailSender from "~/components/EmailSenderold";
 import EmailEditor from "~/components/EmailEditor";
 import { devLog } from "~/utils/dev-log";
 

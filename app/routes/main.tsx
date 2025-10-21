@@ -1,6 +1,6 @@
 import type { Route } from "./+types/main";
 import PdfMerger from "~/components/PdfMerger";
-import EmailSender from "~/components/EmailSender";
+import EmailSender from "~/components/EmailSenderold";
 import ImageWithTextOverlay from "~/components/ImageWithTextOverlay";
 import LiveForm from "~/components/LiveForm";
 import { devLog } from "~/utils/dev-log";

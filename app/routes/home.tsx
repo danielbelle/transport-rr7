@@ -4,7 +4,12 @@ import Form from "~/components/Form";
 import PdfLive from "~/components/PdfLive";
 import ImageLive from "~/components/ImageLive";
 import PdfMergeWithForm from "~/components/PdfMergeWithForm";
-import type { FormData, PdfLiveRef } from "~/components/types";
+import EmailSender from "~/components/EmailSender";
+import type {
+  FormData,
+  PdfLiveRef,
+  PdfMergeWithFormRef,
+} from "~/components/types";
 
 export default function Home() {
   const [formData, setFormData] = useState<FormData>({
@@ -14,6 +19,7 @@ export default function Home() {
   });
 
   const pdfLiveRef = useRef<PdfLiveRef>(null);
+  const pdfMergeRef = useRef<PdfMergeWithFormRef | null>(null);
 
   const handleFormDataChange = (data: FormData) => {
     setFormData(data);
@@ -21,6 +27,10 @@ export default function Home() {
 
   const getCurrentPdfBytes = (): Uint8Array | null => {
     return pdfLiveRef.current?.getCurrentPdfBytes() || null;
+  };
+
+  const handleEmailSent = (pdfBytes: Uint8Array) => {
+    console.log("Email enviado com sucesso!", pdfBytes);
   };
 
   return (
@@ -42,16 +52,23 @@ export default function Home() {
 
         {/* Visualizações em Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Visualização do PDF */}
           <PdfLive ref={pdfLiveRef} formData={formData} />
-
-          {/* Visualização da Imagem */}
           <ImageLive formData={formData} />
         </div>
 
-        {/* Mesclador de PDFs */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <PdfMergeWithForm formPdfBytes={getCurrentPdfBytes()} />
+        {/* Ferramentas de PDF - Fluxo Separado */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <PdfMergeWithForm
+            ref={pdfMergeRef}
+            formPdfBytes={getCurrentPdfBytes()}
+          />
+
+          <EmailSender
+            pdfBytes={getCurrentPdfBytes()}
+            formData={formData}
+            onEmailSent={handleEmailSent}
+            pdfMergeRef={pdfMergeRef}
+          />
         </div>
       </div>
     </div>
