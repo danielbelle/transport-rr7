@@ -68,6 +68,7 @@ export default function Home() {
             formData={formData}
             onEmailSent={handleEmailSent}
             pdfMergeRef={pdfMergeRef}
+            pdfLiveRef={pdfLiveRef} // NOVA PROP PASSADA AQUI
           />
         </div>
       </div>

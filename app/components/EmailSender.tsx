@@ -1,14 +1,15 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { devLog } from "~/utils/dev-log";
 import { emailTemplates } from "~/utils/email-templates";
-import type { EmailSenderProps } from "~/components/types";
+import type { EmailSenderProps, PdfLiveRef } from "~/components/types";
 
 export default function EmailSender({
   pdfBytes,
   formData,
   onEmailSent,
   pdfMergeRef,
-}: EmailSenderProps) {
+  pdfLiveRef,
+}: EmailSenderProps & { pdfLiveRef?: React.RefObject<PdfLiveRef | null> }) {
   const [emailData, setEmailData] = useState({
     to: "henrique.danielb@gmail.com",
     subject: "Formulário Preenchido com Anexo",
@@ -16,48 +17,17 @@ export default function EmailSender({
   });
   const [isSending, setIsSending] = useState(false);
   const [mergedPdfBytes, setMergedPdfBytes] = useState<Uint8Array | null>(null);
-  const [hasAttachment, setHasAttachment] = useState(false);
   const [hasUploadedFile, setHasUploadedFile] = useState(false);
 
-  // CORREÇÃO: Função para verificar o estado do anexo
-  const checkAttachmentStatus = useCallback(() => {
-    const formPdfReady = !!pdfBytes;
-    let uploadedFileReady = false;
-
-    if (pdfMergeRef?.current) {
-      uploadedFileReady = pdfMergeRef.current.hasUploadedFile();
-    }
-
-    const canSend = pdfMergeRef?.current
-      ? uploadedFileReady && formPdfReady
-      : formPdfReady;
-
-    setHasUploadedFile(uploadedFileReady);
-    setHasAttachment(canSend);
-
-    devLog.log("📎 Status do Anexo:", {
-      formPdfReady,
-      uploadedFileReady,
-      canSend,
-      hasPdfMergeRef: !!pdfMergeRef?.current,
-    });
-  }, [pdfBytes, pdfMergeRef]);
-
-  // CORREÇÃO: Registrar callback no PdfMergeWithForm
+  // Efeito simples para registrar callback do PdfMergeWithForm
   useEffect(() => {
     if (pdfMergeRef?.current && (pdfMergeRef.current as any).setOnFileChange) {
       (pdfMergeRef.current as any).setOnFileChange((hasFile: boolean) => {
         devLog.log("📁 Callback recebido do PdfMergeWithForm:", hasFile);
         setHasUploadedFile(hasFile);
-        checkAttachmentStatus(); // Recalcular status completo
       });
     }
-  }, [pdfMergeRef, checkAttachmentStatus]);
-
-  // CORREÇÃO: Verificar status quando pdfBytes mudar
-  useEffect(() => {
-    checkAttachmentStatus();
-  }, [pdfBytes, checkAttachmentStatus]);
+  }, [pdfMergeRef]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -87,6 +57,7 @@ Sistema T-App`;
     }));
   };
 
+  // CORREÇÃO: Função simplificada sem recursão
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -95,15 +66,19 @@ Sistema T-App`;
       return;
     }
 
-    // CORREÇÃO: Verificação final antes do envio
-    checkAttachmentStatus();
+    // Verificação direta e simples do anexo
+    const hasFormPdf = !!pdfBytes;
+    const hasExternalPdf = pdfMergeRef?.current ? hasUploadedFile : false;
+    const canSend = pdfMergeRef?.current
+      ? hasFormPdf && hasExternalPdf
+      : hasFormPdf;
 
-    if (!hasAttachment) {
+    if (!canSend) {
       let errorMessage = "Nenhum anexo disponível para enviar.";
 
       if (!pdfBytes) {
         errorMessage += " Preencha o formulário para gerar o PDF.";
-      } else if (pdfMergeRef?.current && !hasUploadedFile) {
+      } else if (pdfMergeRef?.current && !hasExternalPdf) {
         errorMessage +=
           " Selecione um PDF para anexar no componente 'Mesclar PDFs'.";
       }
@@ -116,14 +91,30 @@ Sistema T-App`;
 
     try {
       let finalPdfBytes = pdfBytes;
+      let isMerged = false;
+
+      // FORÇAR GERAÇÃO DO PDF ANTES DO MERGE
+      if (!finalPdfBytes && pdfLiveRef?.current) {
+        devLog.log("🔄 Gerando PDF antes do merge...");
+        finalPdfBytes = await pdfLiveRef.current.generatePdf();
+
+        if (!finalPdfBytes) {
+          alert("Erro ao gerar PDF. Tente novamente.");
+          setIsSending(false);
+          return;
+        }
+
+        devLog.log("✅ PDF gerado com sucesso:", finalPdfBytes.length, "bytes");
+      }
 
       // Se houver referência para o merge e arquivo selecionado, realizar merge
-      if (pdfMergeRef?.current && hasUploadedFile) {
+      if (pdfMergeRef?.current && hasExternalPdf) {
         devLog.log("Realizando merge antes do envio...");
         const mergedBytes = await pdfMergeRef.current.performMerge();
         if (mergedBytes) {
           finalPdfBytes = mergedBytes;
           setMergedPdfBytes(mergedBytes);
+          isMerged = true;
           devLog.log("Merge realizado com sucesso!");
         } else {
           devLog.log("Merge não realizado, usando PDF original");
@@ -132,6 +123,7 @@ Sistema T-App`;
 
       if (!finalPdfBytes) {
         alert("Nenhum PDF disponível para enviar");
+        setIsSending(false);
         return;
       }
 
@@ -146,6 +138,7 @@ Sistema T-App`;
         emailData.message
       );
 
+      // CORREÇÃO: Usar isMerged em vez de mergedBytes
       const response = await fetch("/api/send-email", {
         method: "POST",
         headers: {
@@ -157,7 +150,7 @@ Sistema T-App`;
           html: emailHtml,
           attachments: [
             {
-              filename: mergedPdfBytes
+              filename: isMerged
                 ? "formulario-com-anexo.pdf"
                 : "formulario-preenchido.pdf",
               content: pdfBase64,
@@ -190,6 +183,11 @@ Sistema T-App`;
       setIsSending(false);
     }
   };
+
+  // Status do anexo para display (apenas visual)
+  const hasAttachment = pdfMergeRef?.current
+    ? !!pdfBytes && hasUploadedFile
+    : !!pdfBytes;
 
   return (
     <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">

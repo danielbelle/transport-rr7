@@ -11,7 +11,6 @@ import { devLog } from "~/utils/dev-log";
 import type { PdfLiveProps, FormData, PdfLiveRef } from "~/components/types";
 import { fieldConfig } from "~/components/ui/fieldConfig";
 
-// Use forwardRef para expor métodos/funções para o componente pai
 const PdfLive = forwardRef<PdfLiveRef, PdfLiveProps>(
   ({ formData, onPdfGenerated }, ref) => {
     const [isLoadingPdf, setIsLoadingPdf] = useState(true);
@@ -19,11 +18,6 @@ const PdfLive = forwardRef<PdfLiveRef, PdfLiveProps>(
     const templateBytesRef = useRef<ArrayBuffer | null>(null);
     const previewTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const currentPdfBytesRef = useRef<Uint8Array | null>(null);
-
-    // Expor o currentPdfBytes para o componente pai via ref
-    useImperativeHandle(ref, () => ({
-      getCurrentPdfBytes: () => currentPdfBytesRef.current,
-    }));
 
     // Carregar o template apenas uma vez
     const loadPdfTemplate = useCallback(async (): Promise<ArrayBuffer> => {
@@ -56,7 +50,7 @@ const PdfLive = forwardRef<PdfLiveRef, PdfLiveProps>(
     }, []);
 
     // Função para gerar o PDF com os dados atuais
-    const generatePdfPreview = useCallback(async () => {
+    const generatePdfPreview = useCallback(async (): Promise<string | null> => {
       try {
         const templateBytes = await loadPdfTemplate();
         const pdfDoc = await PDFDocument.load(templateBytes);
@@ -101,6 +95,28 @@ const PdfLive = forwardRef<PdfLiveRef, PdfLiveProps>(
         return null;
       }
     }, [formData, loadPdfTemplate, onPdfGenerated]);
+
+    // Função para forçar geração do PDF (nova)
+    const generatePdf = async (): Promise<Uint8Array | null> => {
+      try {
+        devLog.log("🔄 Forçando geração do PDF...");
+        await generatePdfPreview();
+        return currentPdfBytesRef.current;
+      } catch (error) {
+        devLog.error("Erro ao forçar geração do PDF:", error);
+        return null;
+      }
+    };
+
+    // Expor métodos para o componente pai via ref
+    useImperativeHandle(
+      ref,
+      () => ({
+        getCurrentPdfBytes: () => currentPdfBytesRef.current,
+        generatePdf: generatePdf, // NOVO MÉTODO EXPOSTO
+      }),
+      [generatePdf]
+    );
 
     // Atualizar preview quando os dados do formulário mudarem
     useEffect(() => {

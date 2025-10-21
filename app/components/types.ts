@@ -82,7 +82,9 @@ export interface ImageLiveProps {
 
 export interface PdfLiveRef {
   getCurrentPdfBytes: () => Uint8Array | null;
+  generatePdf: () => Promise<Uint8Array | null>;
 }
+
 export interface EmailWithPdfProps {
   formPdfBytes: Uint8Array | null;
   formData: FormData;
@@ -106,4 +108,5 @@ export interface EmailSenderProps {
   formData: FormData;
   onEmailSent?: (pdfBytes: Uint8Array) => void;
   pdfMergeRef?: React.RefObject<PdfMergeWithFormRef | null>;
+  pdfLiveRef?: React.RefObject<PdfLiveRef | null>;
 }
