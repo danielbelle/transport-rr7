@@ -1,9 +1,9 @@
 import { useState, useRef } from "react";
 import type { Route } from "./+types/home";
-import EmailSender from "~/components/EmailSender";
-import Form from "~/components/Form";
-import LiveImage from "~/components/LiveImage";
-import LivePdf from "~/components/LivePdf";
+import EmailSender from "~/components/old/EmailSender";
+import Form from "~/components/old/Form-old";
+import ImageLive from "~/components/old/ImageLive";
+import PdfLive from "~/components/old/PdfLive";
 import PdfMergeWithForm from "~/components/PdfMergeWithForm";
 import type { FormData, PdfLiveRef, PdfMergeWithFormRef } from "~/utils/types";
 
@@ -48,8 +48,8 @@ export default function Home() {
 
         {/* Visualizações em Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <LivePdf ref={pdfLiveRef} formData={formData} />
-          <LiveImage formData={formData} />
+          <PdfLive ref={pdfLiveRef} formData={formData} />
+          <ImageLive formData={formData} />
         </div>
 
         {/* Ferramentas de PDF - Fluxo Separado */}
@@ -64,7 +64,7 @@ export default function Home() {
             formData={formData}
             onEmailSent={handleEmailSent}
             pdfMergeRef={pdfMergeRef}
-            pdfLiveRef={pdfLiveRef}
+            pdfLiveRef={pdfLiveRef} // NOVA PROP PASSADA AQUI
           />
         </div>
       </div>

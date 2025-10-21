@@ -1,32 +1,66 @@
 import { useState, useEffect } from "react";
-import type { FormProps, FormData } from "~/utils/types";
+import { FormInput } from "~/components/ui/FormInput";
+import { FormSignature } from "~/components/ui/FormSignature";
+import { fieldConfig } from "~/utils/fieldConfig";
+import type { FormProps, FormData, FlexibleFormData } from "~/utils/types";
 
 export default function Form({ onFormDataChange, initialData }: FormProps) {
-  const [formData, setFormData] = useState<FormData>(
-    initialData || {
-      text_nome: "",
-      text_rg: "",
-      text_cpf: "",
-    }
-  );
+  // CORREÇÃO: Inicializar com valores padrão que satisfazem FlexibleFormData
+  const [formData, setFormData] = useState<FlexibleFormData>({
+    text_nome: initialData?.text_nome || "",
+    text_rg: initialData?.text_rg || "",
+    text_cpf: initialData?.text_cpf || "",
+    signature: initialData?.signature || "",
+  });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
+  const handleFieldChange = (fieldKey: string, value: string) => {
     const newData = {
       ...formData,
-      [name]: value,
+      [fieldKey]: value,
     };
 
     setFormData(newData);
-    // Notificar imediatamente a mudança (sem debounce aqui)
-    onFormDataChange?.(newData);
+
+    // Converter para FormData antes de notificar
+    const formDataToSend: FormData = {
+      text_nome: newData.text_nome,
+      text_rg: newData.text_rg,
+      text_cpf: newData.text_cpf,
+      signature: newData.signature,
+    };
+    onFormDataChange?.(formDataToSend);
+  };
+
+  const handleSignatureChange = (
+    fieldKey: string,
+    signatureData: string | null
+  ) => {
+    const newData = {
+      ...formData,
+      [fieldKey]: signatureData || "",
+    };
+
+    setFormData(newData);
+
+    // Converter para FormData antes de notificar
+    const formDataToSend: FormData = {
+      text_nome: newData.text_nome,
+      text_rg: newData.text_rg,
+      text_cpf: newData.text_cpf,
+      signature: newData.signature,
+    };
+    onFormDataChange?.(formDataToSend);
   };
 
   // Notificar mudanças iniciais
   useEffect(() => {
-    onFormDataChange?.(formData);
+    const initialFormData: FormData = {
+      text_nome: formData.text_nome,
+      text_rg: formData.text_rg,
+      text_cpf: formData.text_cpf,
+      signature: formData.signature,
+    };
+    onFormDataChange?.(initialFormData);
   }, []);
 
   return (
@@ -35,51 +69,29 @@ export default function Form({ onFormDataChange, initialData }: FormProps) {
         Formulário de Dados
       </h2>
 
-      <form className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Nome Completo *
-          </label>
-          <input
-            type="text"
-            name="text_nome"
-            value={formData.text_nome}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-            placeholder="Digite seu nome completo"
-            required
-          />
-        </div>
+      <form className="space-y-6">
+        {fieldConfig
+          .filter((field) => !field.hidden)
+          .map((field) => {
+            if (field.type === "signature") {
+              return (
+                <FormSignature
+                  key={field.key}
+                  field={field}
+                  onSignatureChange={handleSignatureChange}
+                />
+              );
+            }
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            RG *
-          </label>
-          <input
-            type="text"
-            name="text_rg"
-            value={formData.text_rg}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-            placeholder="Digite seu RG"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            CPF *
-          </label>
-          <input
-            type="text"
-            name="text_cpf"
-            value={formData.text_cpf}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-            placeholder="Digite seu CPF"
-            required
-          />
-        </div>
+            return (
+              <FormInput
+                key={field.key}
+                field={field}
+                value={formData[field.key] || ""}
+                onChange={handleFieldChange}
+              />
+            );
+          })}
       </form>
 
       {/* Informações do Formulário */}
@@ -96,6 +108,10 @@ export default function Form({ onFormDataChange, initialData }: FormProps) {
           </div>
           <div>
             <strong>CPF:</strong> {formData.text_cpf || "[Não preenchido]"}
+          </div>
+          <div>
+            <strong>Assinatura:</strong>{" "}
+            {formData.signature ? "✓ Preenchida" : "[Não assinado]"}
           </div>
         </div>
       </div>

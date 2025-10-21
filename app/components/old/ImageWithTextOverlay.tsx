@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FieldInput } from "~/components/ui/FieldInput";
+import { FieldInput } from "~/components/old/FieldInput";
 import { CanvasPreview } from "~/components/ui/CanvasPreview";
 import { fieldConfig } from "~/utils/fieldConfig";
 import type {

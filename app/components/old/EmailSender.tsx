@@ -19,7 +19,7 @@ export default function EmailSender({
   const [mergedPdfBytes, setMergedPdfBytes] = useState<Uint8Array | null>(null);
   const [hasUploadedFile, setHasUploadedFile] = useState(false);
 
-  // Efeito para registrar callback do PdfMergeWithForm
+  // Efeito simples para registrar callback do PdfMergeWithForm
   useEffect(() => {
     if (pdfMergeRef?.current && (pdfMergeRef.current as any).setOnFileChange) {
       (pdfMergeRef.current as any).setOnFileChange((hasFile: boolean) => {
@@ -57,32 +57,7 @@ Sistema T-App`;
     }));
   };
 
-  // CORREÇÃO: Função separada para gerar PDF sem recursão
-  const generatePdfIfNeeded = async (): Promise<Uint8Array | null> => {
-    if (pdfBytes) {
-      return pdfBytes;
-    }
-
-    if (pdfLiveRef?.current) {
-      devLog.log("🔄 Gerando PDF antes do envio...");
-      try {
-        const generatedPdf = await pdfLiveRef.current.generatePdf();
-        if (generatedPdf) {
-          devLog.log(
-            "✅ PDF gerado com sucesso:",
-            generatedPdf.length,
-            "bytes"
-          );
-          return generatedPdf;
-        }
-      } catch (error) {
-        devLog.error("Erro ao gerar PDF:", error);
-      }
-    }
-
-    return null;
-  };
-
+  // CORREÇÃO: Função simplificada sem recursão
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -115,12 +90,25 @@ Sistema T-App`;
     setIsSending(true);
 
     try {
-      // CORREÇÃO: Usar função separada para gerar PDF
-      let finalPdfBytes = await generatePdfIfNeeded();
+      let finalPdfBytes = pdfBytes;
       let isMerged = false;
 
+      // FORÇAR GERAÇÃO DO PDF ANTES DO MERGE
+      if (!finalPdfBytes && pdfLiveRef?.current) {
+        devLog.log("🔄 Gerando PDF antes do merge...");
+        finalPdfBytes = await pdfLiveRef.current.generatePdf();
+
+        if (!finalPdfBytes) {
+          alert("Erro ao gerar PDF. Tente novamente.");
+          setIsSending(false);
+          return;
+        }
+
+        devLog.log("✅ PDF gerado com sucesso:", finalPdfBytes.length, "bytes");
+      }
+
       // Se houver referência para o merge e arquivo selecionado, realizar merge
-      if (pdfMergeRef?.current && hasExternalPdf && finalPdfBytes) {
+      if (pdfMergeRef?.current && hasExternalPdf) {
         devLog.log("Realizando merge antes do envio...");
         const mergedBytes = await pdfMergeRef.current.performMerge();
         if (mergedBytes) {
@@ -150,6 +138,7 @@ Sistema T-App`;
         emailData.message
       );
 
+      // CORREÇÃO: Usar isMerged em vez de mergedBytes
       const response = await fetch("/api/send-email", {
         method: "POST",
         headers: {
@@ -203,7 +192,7 @@ Sistema T-App`;
   return (
     <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
       <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-        Enviar Documento por Email
+        Enviar PDF por Email
       </h2>
 
       <form onSubmit={handleSendEmail} className="space-y-4">
@@ -333,7 +322,7 @@ Sistema T-App`;
           disabled={isSending || !hasAttachment}
           className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-md font-medium transition-colors"
         >
-          {isSending ? "📧 Enviando Email..." : "📧 Enviar Documento por Email"}
+          {isSending ? "📧 Enviando Email..." : "📧 Enviar PDF por Email"}
         </button>
 
         {!hasAttachment && (

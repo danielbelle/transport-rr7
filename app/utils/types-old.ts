@@ -42,10 +42,8 @@ export interface FormData {
   signature?: string; // Adicionado campo opcional para assinatura
 }
 
-// CORREÇÃO: Definir FlexibleFormData como uma interface que estende FormData
-export interface FlexibleFormData extends FormData {
-  [key: string]: string | undefined;
-}
+// Tipo mais flexível para uso interno no ImageLive
+export type FlexibleFormData = FormData & Record<string, string | undefined>;
 
 /**
  * Componente de assinatura
@@ -77,20 +75,15 @@ export interface FormProps {
   onFormDataChange?: (data: FormData) => void;
   initialData?: FormData;
 }
-
-// RENOMEADO: PdfLiveProps para LivePdfProps
-export interface LivePdfProps {
+export interface PdfLiveProps {
   formData: FormData;
   onPdfGenerated?: (pdfUrl: string) => void;
 }
-
-// RENOMEADO: ImageLiveProps para LiveImageProps
-export interface LiveImageProps {
+export interface ImageLiveProps {
   formData: FormData;
   onImageGenerated?: (imageUrl: string) => void;
 }
 
-// RENOMEADO: PdfLiveRef permanece o mesmo (é usado por ambos)
 export interface PdfLiveRef {
   getCurrentPdfBytes: () => Uint8Array | null;
   generatePdf: () => Promise<Uint8Array | null>;
