@@ -39,7 +39,11 @@ export interface FormData {
   text_nome: string;
   text_rg: string;
   text_cpf: string;
+  signature?: string; // Adicionado campo opcional para assinatura
 }
+
+// Tipo mais flexível para uso interno no ImageLive
+export type FlexibleFormData = FormData & Record<string, string | undefined>;
 
 /**
  * Componente de assinatura
@@ -55,7 +59,7 @@ export interface SignatureFieldProps {
 
 export interface FieldInputProps {
   field: FieldConfig;
-  formData: FormData;
+  formData: FlexibleFormData;
   onChange: (fieldKey: string, value: string) => void;
   onSignatureChange: (fieldKey: string, signatureData: string | null) => void;
 }

@@ -34,6 +34,19 @@ export const fieldConfig: FieldConfig[] = [
     y: 206,
     required: true,
   },
+  {
+    key: "signature",
+    name: "signature",
+    label: "Assinatura",
+    placeholder: "Clique para assinar",
+    type: "signature",
+    font: 0,
+    x: 250,
+    y: 500,
+    width: 300,
+    height: 100,
+    required: true,
+  },
 ];
 
 // Configuração para PDF

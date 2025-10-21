@@ -1,11 +1,24 @@
 import React, { useState, useRef, useEffect } from "react";
+import { FieldInput } from "~/components/ui/FieldInput";
 import { CanvasPreview } from "~/components/ui/CanvasPreview";
 import { fieldConfig } from "~/utils/fieldConfig";
-import type { TextOverlay, FormData, ImageLiveProps } from "~/utils/types";
+import type {
+  TextOverlay,
+  FormData,
+  ImageLiveProps,
+  FlexibleFormData,
+} from "~/utils/types";
 
 export default function ImageLive({ formData }: ImageLiveProps) {
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
+  const [signatures, setSignatures] = useState<{ [key: string]: string }>({});
+  const [localFormData, setLocalFormData] = useState<FlexibleFormData>({
+    text_nome: "",
+    text_rg: "",
+    text_cpf: "",
+  });
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const signatureUpdateRef = useRef<number>(0);
 
   // Configurações
   const imageUrl = "/samples/sample750.png";
@@ -13,6 +26,15 @@ export default function ImageLive({ formData }: ImageLiveProps) {
   const canvasHeight = 750;
   const textColor = "#000000";
   const timeDebounce = 400;
+
+  // Sincronizar com formData externo - VERSÃO SIMPLIFICADA
+  useEffect(() => {
+    setLocalFormData({
+      text_nome: formData.text_nome,
+      text_rg: formData.text_rg,
+      text_cpf: formData.text_cpf,
+    });
+  }, [formData]);
 
   // Função para criar overlay de texto
   function createTextOverlay(
@@ -31,6 +53,24 @@ export default function ImageLive({ formData }: ImageLiveProps) {
     };
   }
 
+  // Função para criar overlay de assinatura
+  function createSignatureOverlay(
+    field: (typeof fieldConfig)[number],
+    imageData: string
+  ): TextOverlay {
+    return {
+      id: `${field.key}-${signatureUpdateRef.current}`,
+      text: "",
+      x: field.x,
+      y: field.y,
+      fontSize: 0,
+      color: textColor,
+      fieldKey: field.key,
+      type: "signature",
+      imageData,
+    };
+  }
+
   // Atualizar overlays quando formData mudar com debounce
   useEffect(() => {
     if (timeoutRef.current) {
@@ -39,26 +79,57 @@ export default function ImageLive({ formData }: ImageLiveProps) {
     timeoutRef.current = setTimeout(() => {
       updateTextOverlays();
     }, timeDebounce);
+  }, [localFormData]);
 
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [formData]);
+  // Atualizar overlays imediatamente quando assinaturas mudarem
+  useEffect(() => {
+    updateTextOverlays();
+  }, [signatures]);
 
   // Atualiza todos os overlays
   function updateTextOverlays() {
     const overlays = fieldConfig
-      .filter((field) => !field.hidden && field.type !== "signature")
+      .filter((field) => !field.hidden)
       .map((field) => {
-        const value = (formData as any)[field.key] || "";
+        if (field.type === "signature") {
+          const imageData = signatures[field.key];
+          return imageData ? createSignatureOverlay(field, imageData) : null;
+        }
+        const value = localFormData[field.key] || "";
         return value.trim() ? createTextOverlay(field, value) : null;
       })
       .filter(Boolean) as TextOverlay[];
 
     setTextOverlays(overlays);
   }
+
+  const handleFieldChange = (fieldKey: string, value: string) => {
+    const newData = {
+      ...localFormData,
+      [fieldKey]: value,
+    };
+    setLocalFormData(newData);
+  };
+
+  const handleSignatureChange = (
+    fieldKey: string,
+    signatureData: string | null
+  ) => {
+    // Incrementar o contador para forçar nova renderização
+    signatureUpdateRef.current += 1;
+
+    setSignatures((prev) => {
+      if (signatureData === null) {
+        const newSignatures = { ...prev };
+        delete newSignatures[fieldKey];
+        return newSignatures;
+      }
+      return {
+        ...prev,
+        [fieldKey]: signatureData,
+      };
+    });
+  };
 
   const downloadImage = () => {
     const canvas = document.createElement("canvas");
@@ -73,77 +144,100 @@ export default function ImageLive({ formData }: ImageLiveProps) {
         // Desenhar imagem de fundo
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        // Desenhar textos
+        // Desenhar textos e assinaturas
+        const drawOperations: Promise<void>[] = [];
+
         textOverlays.forEach((overlay) => {
-          if (overlay.text && overlay.text.trim() !== "") {
+          if (overlay.type === "signature" && overlay.imageData) {
+            // Usar Promise para garantir que a imagem seja carregada antes de desenhar
+            const drawPromise = new Promise<void>((resolve) => {
+              const signatureImg = new Image();
+              signatureImg.onload = () => {
+                ctx.drawImage(signatureImg, overlay.x, overlay.y, 300, 100);
+                resolve();
+              };
+              signatureImg.src = overlay.imageData || "";
+            });
+            drawOperations.push(drawPromise);
+          } else if (overlay.text && overlay.text.trim() !== "") {
             ctx.font = `${overlay.fontSize}px Arial`;
             ctx.fillStyle = overlay.color;
             ctx.fillText(overlay.text, overlay.x, overlay.y);
           }
         });
 
-        // Fazer download
-        const link = document.createElement("a");
-        link.download = "documento-preenchido.png";
-        link.href = canvas.toDataURL();
-        link.click();
+        // Esperar todas as assinaturas carregarem antes de fazer download
+        Promise.all(drawOperations).then(() => {
+          const link = document.createElement("a");
+          link.download = "documento-assinado.png";
+          link.href = canvas.toDataURL();
+          link.click();
+        });
       }
     };
 
     img.src = imageUrl;
   };
 
+  const clearAllTexts = () => {
+    setTextOverlays([]);
+    setLocalFormData({
+      text_nome: "",
+      text_rg: "",
+      text_cpf: "",
+    });
+    setSignatures({});
+    signatureUpdateRef.current = 0;
+  };
+
   return (
     <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
       <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-        Visualização da Imagem em Tempo Real
+        Editor de Documento com Assinatura
       </h2>
 
-      <div className="space-y-4">
-        {/* Preview da Imagem */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            Preview da Imagem:
-          </h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Controles */}
+        <div className="space-y-6">
+          {fieldConfig
+            .filter((field) => !field.hidden)
+            .map((field) => (
+              <FieldInput
+                key={field.key}
+                field={field}
+                formData={localFormData}
+                onChange={handleFieldChange}
+                onSignatureChange={handleSignatureChange}
+              />
+            ))}
 
-          <CanvasPreview
-            imageUrl={imageUrl}
-            canvasWidth={canvasWidth}
-            canvasHeight={canvasHeight}
-            textOverlays={textOverlays}
-          />
-        </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={downloadImage}
+              disabled={textOverlays.length === 0}
+              className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white py-2 px-4 rounded-md font-medium transition-colors"
+            >
+              📥 Download do Documento
+            </button>
 
-        {/* Botão de Download */}
-        <button
-          type="button"
-          onClick={downloadImage}
-          disabled={textOverlays.length === 0}
-          className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white py-3 px-4 rounded-md font-medium transition-colors"
-        >
-          📥 Download da Imagem
-        </button>
-
-        {/* Debug Info */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-md border border-blue-200 dark:border-blue-800">
-          <h4 className="font-medium text-blue-800 dark:text-blue-300 mb-2">
-            Dados na Imagem:
-          </h4>
-          <div className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
-            <div>
-              <strong>Nome:</strong> {formData.text_nome || "Vazio"}
-            </div>
-            <div>
-              <strong>RG:</strong> {formData.text_rg || "Vazio"}
-            </div>
-            <div>
-              <strong>CPF:</strong> {formData.text_cpf || "Vazio"}
-            </div>
-            <div>
-              <strong>Textos desenhados:</strong> {textOverlays.length}
-            </div>
+            <button
+              type="button"
+              onClick={clearAllTexts}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md font-medium transition-colors"
+            >
+              🗑️ Limpar Tudo
+            </button>
           </div>
         </div>
+
+        {/* Preview */}
+        <CanvasPreview
+          imageUrl={imageUrl}
+          canvasWidth={canvasWidth}
+          canvasHeight={canvasHeight}
+          textOverlays={textOverlays}
+        />
       </div>
     </div>
   );

@@ -21,6 +21,7 @@ export const FieldInput: React.FC<FieldInputProps> = ({
       </label>
       <input
         type={field.type}
+        name={field.name}
         value={formData[field.key] || ""}
         placeholder={field.placeholder}
         onChange={(e) => onChange(field.key, e.target.value)}

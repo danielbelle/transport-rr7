@@ -2,20 +2,23 @@ import React, { useState, useRef, useEffect } from "react";
 import { FieldInput } from "~/components/ui/FieldInput";
 import { CanvasPreview } from "~/components/ui/CanvasPreview";
 import { fieldConfig } from "~/utils/fieldConfig";
-import type { TextOverlay, FormData } from "~/utils/types";
+import type {
+  TextOverlay,
+  FormData,
+  ImageLiveProps,
+  FlexibleFormData,
+} from "~/utils/types";
 
-const ImageWithTextOverlay = () => {
+export default function ImageLive({ formData }: ImageLiveProps) {
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
   const [signatures, setSignatures] = useState<{ [key: string]: string }>({});
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const signatureUpdateRef = useRef<number>(0);
-
-  const visibleFields = fieldConfig.filter((field) => !field.hidden);
-  const [formData, setFormData] = useState<FormData>({
+  const [localFormData, setLocalFormData] = useState<FlexibleFormData>({
     text_nome: "",
     text_rg: "",
     text_cpf: "",
   });
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const signatureUpdateRef = useRef<number>(0);
 
   // Configurações
   const imageUrl = "/samples/sample750.png";
@@ -23,6 +26,11 @@ const ImageWithTextOverlay = () => {
   const canvasHeight = 750;
   const textColor = "#000000";
   const timeDebounce = 400;
+
+  // Sincronizar com formData externo
+  useEffect(() => {
+    setLocalFormData(formData as FlexibleFormData);
+  }, [formData]);
 
   // Função para criar overlay de texto
   function createTextOverlay(
@@ -67,7 +75,7 @@ const ImageWithTextOverlay = () => {
     timeoutRef.current = setTimeout(() => {
       updateTextOverlays();
     }, timeDebounce);
-  }, [formData]);
+  }, [localFormData]);
 
   // Atualizar overlays imediatamente quando assinaturas mudarem
   useEffect(() => {
@@ -83,7 +91,7 @@ const ImageWithTextOverlay = () => {
           const imageData = signatures[field.key];
           return imageData ? createSignatureOverlay(field, imageData) : null;
         }
-        const value = formData[field.key as keyof FormData] || "";
+        const value = localFormData[field.key as keyof FormData] || "";
         return value.trim() ? createTextOverlay(field, value) : null;
       })
       .filter(Boolean) as TextOverlay[];
@@ -92,10 +100,11 @@ const ImageWithTextOverlay = () => {
   }
 
   const handleFieldChange = (fieldKey: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
+    const newData = {
+      ...localFormData,
       [fieldKey]: value,
-    }));
+    };
+    setLocalFormData(newData);
   };
 
   const handleSignatureChange = (
@@ -140,7 +149,7 @@ const ImageWithTextOverlay = () => {
             const drawPromise = new Promise<void>((resolve) => {
               const signatureImg = new Image();
               signatureImg.onload = () => {
-                ctx.drawImage(signatureImg, overlay.x, overlay.y);
+                ctx.drawImage(signatureImg, overlay.x, overlay.y, 300, 100);
                 resolve();
               };
               signatureImg.src = overlay.imageData || "";
@@ -168,7 +177,7 @@ const ImageWithTextOverlay = () => {
 
   const clearAllTexts = () => {
     setTextOverlays([]);
-    setFormData({
+    setLocalFormData({
       text_nome: "",
       text_rg: "",
       text_cpf: "",
@@ -186,15 +195,17 @@ const ImageWithTextOverlay = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Controles */}
         <div className="space-y-6">
-          {visibleFields.map((field) => (
-            <FieldInput
-              key={field.key}
-              field={field}
-              formData={formData}
-              onChange={handleFieldChange}
-              onSignatureChange={handleSignatureChange}
-            />
-          ))}
+          {fieldConfig
+            .filter((field) => !field.hidden)
+            .map((field) => (
+              <FieldInput
+                key={field.key}
+                field={field}
+                formData={localFormData}
+                onChange={handleFieldChange}
+                onSignatureChange={handleSignatureChange}
+              />
+            ))}
 
           <div className="flex gap-2">
             <button
@@ -226,6 +237,4 @@ const ImageWithTextOverlay = () => {
       </div>
     </div>
   );
-};
-
-export default ImageWithTextOverlay;
+}

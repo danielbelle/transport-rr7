@@ -46,7 +46,7 @@ export const SignatureField: React.FC<SignatureFieldProps> = ({
           onEnd={handleSignatureEnd}
           canvasProps={{
             width: field.width || 400,
-            height: field.height || 400,
+            height: field.height || 200,
             className:
               "w-full border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 cursor-crosshair",
           }}
@@ -66,7 +66,7 @@ export const SignatureField: React.FC<SignatureFieldProps> = ({
       </div>
 
       <div className="text-xs text-gray-500 dark:text-gray-400">
-        Posição na imagem: ({field.x}, {field.y}) | Tamanho:
+        Posição na imagem: ({field.x}, {field.y}) | Tamanho:{" "}
         {field.width || 100}x{field.height || 100}
       </div>
     </div>
