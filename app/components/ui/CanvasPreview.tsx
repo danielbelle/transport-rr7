@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import type { CanvasPreviewProps } from "~/components/types";
+import type { CanvasPreviewProps } from "~/utils/types";
 
 export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
   imageUrl,

@@ -1,15 +1,11 @@
 import { useState, useRef } from "react";
-import type { Route } from "./+types/main";
-import Form from "~/components/Form";
-import PdfLive from "~/components/PdfLive";
-import ImageLive from "~/components/ImageLive";
-import PdfMergeWithForm from "~/components/PdfMergeWithForm";
+import type { Route } from "./+types/home";
 import EmailSender from "~/components/EmailSender";
-import type {
-  FormData,
-  PdfLiveRef,
-  PdfMergeWithFormRef,
-} from "~/components/types";
+import Form from "~/components/Form";
+import ImageLive from "~/components/ImageLive";
+import PdfLive from "~/components/PdfLive";
+import PdfMergeWithForm from "~/components/PdfMergeWithForm";
+import type { FormData, PdfLiveRef, PdfMergeWithFormRef } from "~/utils/types";
 
 export default function Home() {
   const [formData, setFormData] = useState<FormData>({

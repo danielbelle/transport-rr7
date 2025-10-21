@@ -1,6 +1,6 @@
 import React from "react";
 import { SignatureField } from "~/components/ui/SignatureField";
-import type { FieldInputProps } from "~/components/types";
+import type { FieldInputProps } from "~/utils/types";
 
 export const FieldInput: React.FC<FieldInputProps> = ({
   field,

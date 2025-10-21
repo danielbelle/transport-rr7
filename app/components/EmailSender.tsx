@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { devLog } from "~/utils/dev-log";
 import { emailTemplates } from "~/utils/email-templates";
-import type { EmailSenderProps, PdfLiveRef } from "~/components/types";
+import type { EmailSenderProps, PdfLiveRef } from "~/utils/types";
 
 export default function EmailSender({
   pdfBytes,

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
-import type { SignatureComponentProps } from "~/components/types";
+import type { SignatureComponentProps } from "~/utils/types";
 
 export default function SignatureComponent({
   onSignatureChange,

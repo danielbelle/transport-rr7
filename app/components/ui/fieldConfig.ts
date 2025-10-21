@@ -1,4 +1,4 @@
-import type { FieldConfig } from "~/components/types";
+import type { FieldConfig } from "~/utils/types";
 
 export const fieldConfig: FieldConfig[] = [
   {

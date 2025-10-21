@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { FormProps, FormData } from "~/components/types";
+import type { FormProps, FormData } from "~/utils/types";
 
 export default function Form({ onFormDataChange, initialData }: FormProps) {
   const [formData, setFormData] = useState<FormData>(

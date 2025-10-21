@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { devLog } from "~/utils/dev-log";
-import type { EmailWithPdfProps } from "~/components/types";
+import type { EmailWithPdfProps } from "~/utils/types";
 
 export default function EmailWithPdf({
   formPdfBytes,

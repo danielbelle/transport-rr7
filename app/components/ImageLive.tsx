@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { CanvasPreview } from "~/components/ui/CanvasPreview";
 import { fieldConfig } from "~/components/ui/fieldConfig";
-import type { TextOverlay, FormData, ImageLiveProps } from "~/components/types";
+import type { TextOverlay, FormData, ImageLiveProps } from "~/utils/types";
 
 export default function ImageLive({ formData }: ImageLiveProps) {
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);

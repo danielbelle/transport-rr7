@@ -8,10 +8,7 @@ import {
 } from "react";
 import { PDFDocument } from "pdf-lib";
 import { devLog } from "~/utils/dev-log";
-import type {
-  PdfMergeWithFormProps,
-  PdfMergeWithFormRef,
-} from "~/components/types";
+import type { PdfMergeWithFormProps, PdfMergeWithFormRef } from "~/utils/types";
 
 const PdfMergeWithForm = forwardRef<PdfMergeWithFormRef, PdfMergeWithFormProps>(
   ({ formPdfBytes, onMergeComplete, onFileSelectionChange }, ref) => {
