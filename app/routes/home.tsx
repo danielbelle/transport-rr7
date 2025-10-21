@@ -6,6 +6,7 @@ import LiveImage from "~/components/LiveImage";
 import LivePdf from "~/components/LivePdf";
 import PdfMergeWithForm from "~/components/PdfMergeWithForm";
 import type { FormData, PdfLiveRef, PdfMergeWithFormRef } from "~/utils/types";
+import { devLog } from "~/utils/dev-log";
 
 export default function Home() {
   const [formData, setFormData] = useState<FormData>({
@@ -26,7 +27,7 @@ export default function Home() {
   };
 
   const handleEmailSent = (pdfBytes: Uint8Array) => {
-    console.log("Email enviado com sucesso!", pdfBytes);
+    devLog.log("Email enviado com sucesso!");
   };
 
   return (
