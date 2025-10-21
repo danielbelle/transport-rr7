@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { CanvasPreview } from "~/components/ui/CanvasPreview";
-import { fieldConfig } from "~/components/ui/fieldConfig";
+import { fieldConfig } from "~/utils/fieldConfig";
 import type { TextOverlay, FormData, ImageLiveProps } from "~/utils/types";
 
 export default function ImageLive({ formData }: ImageLiveProps) {

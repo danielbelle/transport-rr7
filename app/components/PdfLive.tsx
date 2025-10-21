@@ -9,7 +9,7 @@ import {
 import { PDFDocument, rgb } from "pdf-lib";
 import { devLog } from "~/utils/dev-log";
 import type { PdfLiveProps, FormData, PdfLiveRef } from "~/utils/types";
-import { fieldConfig } from "~/components/ui/fieldConfig";
+import { fieldConfig } from "~/utils/fieldConfig";
 
 const PdfLive = forwardRef<PdfLiveRef, PdfLiveProps>(
   ({ formData, onPdfGenerated }, ref) => {

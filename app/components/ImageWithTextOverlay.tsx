@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FieldInput } from "~/components/ui/FieldInput";
 import { CanvasPreview } from "~/components/ui/CanvasPreview";
-import { fieldConfig } from "~/components/ui/fieldConfig";
+import { fieldConfig } from "~/utils/fieldConfig";
 import type { TextOverlay, FormData } from "~/utils/types";
 
 const ImageWithTextOverlay = () => {
