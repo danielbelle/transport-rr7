@@ -63,7 +63,7 @@ Sistema T-App`;
     }));
   };
 
-  // CORREÇÃO: Função separada para gerar PDF sem recursão
+  // Função separada para gerar PDF sem recursão
   const generatePdfIfNeeded = async (): Promise<Uint8Array | null> => {
     if (pdfBytes) {
       return pdfBytes;
@@ -131,7 +131,7 @@ Sistema T-App`;
     setCompressionInfo(null);
 
     try {
-      // CORREÇÃO: Usar função separada para gerar PDF sem recursão
+      // Usar função separada para gerar PDF sem recursão
       let finalPdfBytes = await generatePdfIfNeeded();
       let isMerged = false;
 
@@ -165,7 +165,7 @@ Sistema T-App`;
         emailData.message
       );
 
-      // CORREÇÃO: Usar o utilitário PdfCompressUtils
+      // Usar o utilitário PdfCompressUtils
       const needsCompression = PdfCompressUtils.needsCompression(
         finalPdfBytes,
         emailHtml
@@ -203,7 +203,7 @@ Sistema T-App`;
         );
       }
 
-      // CORREÇÃO: Usar função segura para converter para Base64
+      // Usar função segura para converter para Base64
       const pdfBase64 = arrayBufferToBase64(pdfToSend);
 
       const response = await fetch("/api/send-email", {

@@ -77,7 +77,7 @@ export const compressPdf = async (
       tamanhoOriginal: `${(originalSize / 1024 / 1024).toFixed(2)} MB`,
     });
 
-    // Tentativa 1: Compressão básica
+    // Compressão básica
     attempts++;
     compressedBytes = await compressPdfBasic(pdfBytes);
 

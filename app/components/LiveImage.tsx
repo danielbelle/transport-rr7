@@ -72,7 +72,7 @@ export default function LiveImage({ formData }: LiveImageProps) {
 
   // Atualiza todos os overlays da imagem
   function updateImageOverlays() {
-    // CORREÇÃO: Converter FormData para FlexibleFormData usando type assertion
+    // Converter FormData para FlexibleFormData usando type assertion
     const flexibleFormData = formData as unknown as FlexibleFormData;
 
     const overlays = fieldConfig

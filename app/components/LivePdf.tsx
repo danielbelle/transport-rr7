@@ -128,7 +128,7 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
         const page = pages[0];
         const pageHeight = page.getHeight();
 
-        // CORREÇÃO: Converter FormData para FlexibleFormData usando type assertion
+        // Converter FormData para FlexibleFormData usando type assertion
         const flexibleFormData = formData as unknown as FlexibleFormData;
 
         // Desenhar texto nas posições definidas
@@ -196,7 +196,7 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
       }
     }, [formData, loadPdfTemplate, onPdfGenerated]);
 
-    // CORREÇÃO: Função generatePdf separada e independente
+    // Função generatePdf separada e independente
     const generatePdf = useCallback(async (): Promise<Uint8Array | null> => {
       try {
         devLog.log("🔄 Forçando geração do PDF...");

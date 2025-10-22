@@ -8,7 +8,7 @@ export const fieldConfig: FieldConfig[] = [
     placeholder: "Digite seu nome completo",
     type: "text",
     font: 14,
-    x: 123,
+    x: 120,
     y: 131,
     required: true,
   },
@@ -51,8 +51,8 @@ export const fieldConfig: FieldConfig[] = [
 
 // Configuração para PDF
 export const pdfFieldConfig: Record<string, { x: number; y: number }> = {
-  text_nome: { x: 123, y: 131 },
+  text_nome: { x: 0, y: 131 },
   text_rg: { x: 261, y: 168 },
   text_cpf: { x: 100, y: 206 },
-  signature: { x: 100, y: 300 }, // Adicionar coordenadas da assinatura
+  signature: { x: 100, y: 300 },
 };

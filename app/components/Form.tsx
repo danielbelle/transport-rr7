@@ -5,7 +5,7 @@ import { fieldConfig } from "~/utils/fieldConfig";
 import type { FormProps, FormData, FlexibleFormData } from "~/utils/types";
 
 export default function Form({ onFormDataChange, initialData }: FormProps) {
-  // CORREÇÃO: Inicializar com valores padrão que satisfazem FlexibleFormData
+  // Inicializar com valores padrão que satisfazem FlexibleFormData
   const [formData, setFormData] = useState<FlexibleFormData>({
     text_nome: initialData?.text_nome || "",
     text_rg: initialData?.text_rg || "",

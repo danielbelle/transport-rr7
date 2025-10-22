@@ -19,10 +19,10 @@ const PdfMergeWithForm = forwardRef<PdfMergeWithFormRef, PdfMergeWithFormProps>(
     );
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // CORREÇÃO: Referência para callback externo
+    // Referência para callback externo
     const onFileChangeRef = useRef<((hasFile: boolean) => void) | null>(null);
 
-    // CORREÇÃO: Função para notificar mudanças
+    // Função para notificar mudanças
     const notifyFileChange = useCallback(
       (hasFile: boolean) => {
         devLog.log("📁 Notificando mudança de arquivo:", hasFile);
@@ -37,7 +37,7 @@ const PdfMergeWithForm = forwardRef<PdfMergeWithFormRef, PdfMergeWithFormProps>(
       notifyFileChange(!!uploadedPdf);
     }, [uploadedPdf, notifyFileChange]);
 
-    // CORREÇÃO: Expor função para receber callback via ref
+    // Expor função para receber callback via ref
     useImperativeHandle(
       ref,
       () => ({
@@ -83,7 +83,7 @@ const PdfMergeWithForm = forwardRef<PdfMergeWithFormRef, PdfMergeWithFormProps>(
     };
 
     const handleMergePdfs = async (): Promise<Uint8Array | null> => {
-      // CORREÇÃO: Verificar se temos o PDF editado (com dados do formulário)
+      // Verificar se temos o PDF editado (com dados do formulário)
       if (!formPdfBytes) {
         alert("É necessário preencher o formulário para gerar o PDF editado!");
         return null;
@@ -99,7 +99,7 @@ const PdfMergeWithForm = forwardRef<PdfMergeWithFormRef, PdfMergeWithFormProps>(
       try {
         const mergedPdf = await PDFDocument.create();
 
-        // CORREÇÃO: Usar o PDF editado (formPdfBytes) que já contém os dados preenchidos
+        // Usar o PDF editado (formPdfBytes) que já contém os dados preenchidos
         // O formPdfBytes aqui já é o PDF gerado pelo PdfLive com os dados do formulário
         devLog.log("📄 Usando PDF editado com dados do formulário para merge");
 
