@@ -45,16 +45,16 @@ export default function Home() {
         {/* Formulário */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <Form onFormDataChange={handleFormDataChange} />
-          <LivePdf ref={pdfLiveRef} formData={formData} />
+          <LiveImage formData={formData} />
         </div>
 
         {/* Visualizações em Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <LivePdf ref={pdfLiveRef} formData={formData} />
           <PdfMergeWithForm
             ref={pdfMergeRef}
             formPdfBytes={getCurrentPdfBytes()}
           />
-          <LiveImage formData={formData} />
         </div>
 
         {/* Ferramentas de PDF - Fluxo Separado */}
