@@ -31,6 +31,9 @@ export interface FieldConfig {
   font: number;
   x: number;
   y: number;
+  fontPdf: number;
+  xPdf: number;
+  yPdf: number;
   required: boolean;
   hidden?: boolean;
   width?: number;

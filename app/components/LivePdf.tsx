@@ -15,7 +15,7 @@ import type {
   FlexibleFormData,
   FieldConfig,
 } from "~/utils/types";
-import { fieldConfig } from "~/utils/fieldConfig";
+import { fieldConfig } from "~/utils/field-config";
 
 const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
   ({ formData, onPdfGenerated }, ref) => {
@@ -66,14 +66,11 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
       return bytes;
     };
 
-    // Função para adicionar imagem ao PDF
+    // Função para adicionar imagem ao PDF (usa configurações de PDF)
     const addImageToPdf = async (
       pdfDoc: PDFDocument,
       imageData: string,
-      x: number,
-      y: number,
-      width: FieldConfig["width"] | undefined = 500,
-      height: FieldConfig["height"] | undefined = 100
+      field: FieldConfig
     ) => {
       try {
         // Converter data URL para Uint8Array
@@ -100,6 +97,12 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
         const page = pages[0];
         const pageHeight = page.getHeight();
 
+        // Usar configurações específicas do PDF (xPdf, yPdf, width, height)
+        const x = field.xPdf || field.x;
+        const y = field.yPdf || field.y;
+        const width = 100;
+        const height = 50;
+
         // Desenhar a imagem no PDF
         page.drawImage(image, {
           x: x,
@@ -107,19 +110,12 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
           width: width,
           height: height,
         });
-
-        devLog.log("✅ Assinatura adicionada ao PDF:", {
-          x,
-          y: pageHeight - y - height,
-          width,
-          height,
-        });
       } catch (error) {
         devLog.error("❌ Erro ao adicionar assinatura ao PDF:", error);
       }
     };
 
-    // Função para gerar o PDF com os dados atuais
+    // Função para gerar o PDF com os dados atuais (usa configurações de PDF)
     const generatePdfPreview = useCallback(async (): Promise<string | null> => {
       try {
         const templateBytes = await loadPdfTemplate();
@@ -131,7 +127,7 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
         // Converter FormData para FlexibleFormData usando type assertion
         const flexibleFormData = formData as unknown as FlexibleFormData;
 
-        // Desenhar texto nas posições definidas
+        // Desenhar texto nas posições definidas (usa configurações de PDF)
         fieldConfig.forEach((field) => {
           if (field.type === "signature") {
             // Processar assinaturas separadamente
@@ -141,32 +137,29 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
               return;
             }
           } else {
-            // Processar campos de texto normais
+            // Processar campos de texto normais - usa configurações de PDF
             const value = flexibleFormData[field.key];
             if (value && value.trim() !== "") {
+              const fontSize = field.fontPdf || field.font;
+              const x = field.xPdf || field.x;
+              const y = field.yPdf || field.y;
+
               page.drawText(value, {
-                x: field.x,
-                y: pageHeight - field.y,
-                size: field.font,
+                x: x,
+                y: pageHeight - y, // Ajustar coordenada Y
+                size: fontSize,
                 color: rgb(0, 0, 0),
               });
             }
           }
         });
 
-        // Adicionar assinaturas após o texto
+        // Adicionar assinaturas após o texto (usa configurações de PDF)
         for (const field of fieldConfig) {
           if (field.type === "signature") {
             const signatureData = flexibleFormData[field.key];
             if (signatureData && signatureData.startsWith("data:image/")) {
-              await addImageToPdf(
-                pdfDoc,
-                signatureData,
-                field.x,
-                field.y,
-                field.width || 200,
-                field.height || 80
-              );
+              await addImageToPdf(pdfDoc, signatureData, field);
             }
           }
         }
@@ -196,7 +189,7 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
       }
     }, [formData, loadPdfTemplate, onPdfGenerated]);
 
-    // Função generatePdf separada e independente
+    // Função generatePdf separada e independente (usa configurações de PDF)
     const generatePdf = useCallback(async (): Promise<Uint8Array | null> => {
       try {
         devLog.log("🔄 Forçando geração do PDF...");
@@ -210,7 +203,7 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
 
         const flexibleFormData = formData as unknown as FlexibleFormData;
 
-        // Desenhar texto
+        // Desenhar texto (usa configurações de PDF)
         fieldConfig.forEach((field) => {
           if (field.type === "signature") {
             // Assinaturas serão processadas separadamente
@@ -219,28 +212,25 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
 
           const value = flexibleFormData[field.key];
           if (value && value.trim() !== "") {
+            const fontSize = field.fontPdf || field.font;
+            const x = field.xPdf || field.x;
+            const y = field.yPdf || field.y;
+
             page.drawText(value, {
-              x: field.x,
-              y: pageHeight - field.y,
-              size: field.font,
+              x: x,
+              y: pageHeight - y,
+              size: fontSize,
               color: rgb(0, 0, 0),
             });
           }
         });
 
-        // Adicionar assinaturas
+        // Adicionar assinaturas (usa configurações de PDF)
         for (const field of fieldConfig) {
           if (field.type === "signature") {
             const signatureData = flexibleFormData[field.key];
             if (signatureData && signatureData.startsWith("data:image/")) {
-              await addImageToPdf(
-                pdfDoc,
-                signatureData,
-                field.x,
-                field.y,
-                field.width || 200,
-                field.height || 80
-              );
+              await addImageToPdf(pdfDoc, signatureData, field);
             }
           }
         }
@@ -248,7 +238,6 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
         const pdfBytes = await pdfDoc.save();
         currentPdfBytesRef.current = pdfBytes;
 
-        devLog.log("✅ PDF gerado com sucesso:", pdfBytes.length, "bytes");
         return pdfBytes;
       } catch (error) {
         devLog.error("Erro ao forçar geração do PDF:", error);
@@ -371,6 +360,10 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
               <div>
                 <strong>Status:</strong>{" "}
                 {currentPdfBytesRef.current ? "✓ Pronto" : "⏳ Gerando..."}
+              </div>
+              <div>
+                <strong>Configuração:</strong> Usando posições do PDF (xPdf,
+                yPdf, fontPdf)
               </div>
             </div>
           </div>

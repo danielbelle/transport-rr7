@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { CanvasPreview } from "~/components/ui/CanvasPreview";
-import { fieldConfig } from "~/utils/fieldConfig";
+import { fieldConfig } from "~/utils/field-config";
 import type {
   TextOverlay,
   LiveImageProps,
@@ -18,7 +18,7 @@ export default function LiveImage({ formData }: LiveImageProps) {
   const textColor = "#000000";
   const timeDebounce = 400;
 
-  // Função para criar overlay de texto
+  // Função para criar overlay de texto (usa configurações de IMAGEM)
   function createTextOverlay(
     field: (typeof fieldConfig)[number],
     value: string
@@ -26,16 +26,16 @@ export default function LiveImage({ formData }: LiveImageProps) {
     return {
       id: field.key,
       text: value,
-      x: field.x,
-      y: field.y,
-      fontSize: field.font,
+      x: field.x, // Usa x da imagem
+      y: field.y, // Usa y da imagem
+      fontSize: field.font, // Usa font da imagem
       color: textColor,
       fieldKey: field.key,
       type: "text",
     };
   }
 
-  // Função para criar overlay de assinatura
+  // Função para criar overlay de assinatura (usa configurações de IMAGEM)
   function createSignatureOverlay(
     field: (typeof fieldConfig)[number],
     imageData: string
@@ -43,8 +43,8 @@ export default function LiveImage({ formData }: LiveImageProps) {
     return {
       id: `${field.key}-${Date.now()}`,
       text: "",
-      x: field.x,
-      y: field.y,
+      x: field.x, // Usa x da imagem
+      y: field.y, // Usa y da imagem
       fontSize: 0,
       color: textColor,
       fieldKey: field.key,
@@ -175,6 +175,10 @@ export default function LiveImage({ formData }: LiveImageProps) {
             <div>
               <strong>Assinaturas:</strong>{" "}
               {textOverlays.filter((o) => o.type === "signature").length}
+            </div>
+            <div>
+              <strong>Configuração:</strong> Usando posições da imagem (x, y,
+              font)
             </div>
           </div>
         </div>

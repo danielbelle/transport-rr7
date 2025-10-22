@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { FormInput } from "~/components/ui/FormInput";
 import { FormSignature } from "~/components/ui/FormSignature";
-import { fieldConfig } from "~/utils/fieldConfig";
+import { fieldConfig } from "~/utils/field-config";
 import type { FormProps, FormData, FlexibleFormData } from "~/utils/types";
 
 export default function Form({ onFormDataChange, initialData }: FormProps) {
