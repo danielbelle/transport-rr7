@@ -50,13 +50,13 @@ export const fieldConfig: FieldConfig[] = [
     placeholder: "Clique para assinar",
     type: "signature",
     font: 0,
-    x: 290, // Posição X no PDF
-    y: 500, // Posição Y no PDF
+    x: 290,
+    y: 530,
     fontPdf: 12,
     xPdf: 250,
     yPdf: 420,
-    width: 540, // Largura da assinatura no PDF
-    height: 150, // Altura da assinatura no PDF
+    width: 240, // Largura da assinatura no PDF
+    height: 50, // Altura da assinatura no PDF
     required: true,
   },
 ];

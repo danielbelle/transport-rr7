@@ -54,8 +54,10 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
         // Criar imagem para a assinatura
         const signatureImg = new Image();
         signatureImg.onload = () => {
-          // Redesenhar o canvas quando a imagem da assinatura carregar
-          ctx.drawImage(signatureImg, overlay.x, overlay.y, 300, 100);
+          // USAR AS DIMENSÕES DA CONFIGURAÇÃO DO CAMPO
+          const width = overlay.width || 300;
+          const height = overlay.height || 100;
+          ctx.drawImage(signatureImg, overlay.x, overlay.y, width, height);
         };
         signatureImg.src = overlay.imageData;
       } else if (overlay.text && overlay.text.trim() !== "") {
@@ -98,6 +100,14 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
             {textOverlays.filter((o) => o.type === "signature").length}
           </strong>
         </p>
+        {/* ADICIONAR: Informações sobre dimensões */}
+        {textOverlays
+          .filter((o) => o.type === "signature")
+          .map((overlay, index) => (
+            <p key={index}>
+              Assinatura {index + 1}: {overlay.width} x {overlay.height} px
+            </p>
+          ))}
       </div>
     </div>
   );

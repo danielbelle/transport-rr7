@@ -1,11 +1,6 @@
 import React, { useRef, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
-import type { FieldConfig } from "~/utils/types";
-
-interface FormSignatureProps {
-  field: FieldConfig;
-  onSignatureChange: (fieldKey: string, signatureData: string | null) => void;
-}
+import type { FormSignatureProps } from "~/utils/types";
 
 export const FormSignature: React.FC<FormSignatureProps> = ({
   field,
@@ -13,6 +8,10 @@ export const FormSignature: React.FC<FormSignatureProps> = ({
 }) => {
   const signatureRef = useRef<SignatureCanvas>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+
+  // Dimensões fixas e responsivas para o componente de assinatura
+  const signatureWidth = 500; // Largura fixa
+  const signatureHeight = 150; // Altura fixa
 
   const handleSignatureEnd = () => {
     const canvas = signatureRef.current;
@@ -44,20 +43,30 @@ export const FormSignature: React.FC<FormSignatureProps> = ({
         {field.required && <span className="text-red-500">*</span>}
       </label>
 
-      <div className="border-2 border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
-        <SignatureCanvas
-          ref={signatureRef}
-          penColor="black"
-          onBegin={handleSignatureBegin}
-          onEnd={handleSignatureEnd}
-          canvasProps={{
-            width: field.width || 400,
-            height: field.height || 150,
-            className:
-              "w-full border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 cursor-crosshair",
+      <div className="border-2 border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 overflow-hidden">
+        {/* Container responsivo que mantém a proporção */}
+        <div
+          className="relative w-full bg-white dark:bg-gray-700"
+          style={{
+            height: "auto",
+            aspectRatio: `${signatureWidth} / ${signatureHeight}`,
           }}
-        />
-        <div className="p-3 flex justify-between items-center">
+        >
+          <SignatureCanvas
+            ref={signatureRef}
+            penColor="black"
+            onBegin={handleSignatureBegin}
+            onEnd={handleSignatureEnd}
+            canvasProps={{
+              width: signatureWidth,
+              height: signatureHeight,
+              className:
+                "w-full h-full absolute top-0 left-0 border-0 bg-white dark:bg-gray-700 cursor-crosshair",
+            }}
+          />
+        </div>
+
+        <div className="p-3 flex justify-between items-center border-t border-gray-300 dark:border-gray-600">
           <span className="text-sm text-gray-500 dark:text-gray-400">
             {isDrawing ? "Assinando..." : "Assine na área acima"}
           </span>
@@ -72,8 +81,13 @@ export const FormSignature: React.FC<FormSignatureProps> = ({
       </div>
 
       <div className="text-xs text-gray-500 dark:text-gray-400">
-        Posição no documento: ({field.x}, {field.y}) | Área:{" "}
-        {field.width || 100}x{field.height || 100}
+        <div>
+          <strong>Área de assinatura:</strong> {signatureWidth} ×{" "}
+          {signatureHeight}px
+        </div>
+        <div>
+          <strong>Posição no documento:</strong> ({field.x}, {field.y})
+        </div>
       </div>
     </div>
   );

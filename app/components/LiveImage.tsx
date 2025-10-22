@@ -50,6 +50,9 @@ export default function LiveImage({ formData }: LiveImageProps) {
       fieldKey: field.key,
       type: "signature",
       imageData,
+      // ADICIONAR: Usar width e height da configuração do campo
+      width: field.width || 300, // Valor padrão de fallback
+      height: field.height || 100, // Valor padrão de fallback
     };
   }
 
@@ -116,7 +119,16 @@ export default function LiveImage({ formData }: LiveImageProps) {
             const drawPromise = new Promise<void>((resolve) => {
               const signatureImg = new Image();
               signatureImg.onload = () => {
-                ctx.drawImage(signatureImg, overlay.x, overlay.y, 300, 100);
+                // USAR AS DIMENSÕES DA CONFIGURAÇÃO DO CAMPO
+                const width = overlay.width || 300;
+                const height = overlay.height || 100;
+                ctx.drawImage(
+                  signatureImg,
+                  overlay.x,
+                  overlay.y,
+                  width,
+                  height
+                );
                 resolve();
               };
               signatureImg.src = overlay.imageData || "";
@@ -180,6 +192,15 @@ export default function LiveImage({ formData }: LiveImageProps) {
               <strong>Configuração:</strong> Usando posições da imagem (x, y,
               font)
             </div>
+            {/* ADICIONAR: Informações sobre dimensões da assinatura */}
+            {textOverlays
+              .filter((o) => o.type === "signature")
+              .map((overlay, index) => (
+                <div key={index}>
+                  <strong>Assinatura {index + 1}:</strong> {overlay.width} x{" "}
+                  {overlay.height} px
+                </div>
+              ))}
           </div>
         </div>
       </div>

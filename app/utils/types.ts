@@ -69,6 +69,11 @@ export interface SignatureFieldProps {
   onSignatureChange: (fieldKey: string, signatureData: string | null) => void;
 }
 
+export interface FormSignatureProps {
+  field: FieldConfig;
+  onSignatureChange: (fieldKey: string, signatureData: string | null) => void;
+}
+
 // =============================================================================
 // COMPONENTE: CANVAS PREVIEW
 // =============================================================================
@@ -83,6 +88,8 @@ export interface TextOverlay {
   fieldKey: string;
   type: "text" | "signature";
   imageData?: string;
+  width?: number;
+  height?: number;
 }
 
 export interface CanvasPreviewProps {
