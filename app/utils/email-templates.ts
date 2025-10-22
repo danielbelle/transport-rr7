@@ -1,4 +1,4 @@
-export const emailTemplates = {
+export const EmailTemplates = {
   formEmail: (subject: string, formData: any, message: string) => `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #1f2937;">${subject}</h2>

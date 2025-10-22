@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { devLog } from "~/utils/dev-log";
-import { emailTemplates } from "~/utils/email-templates";
+import { EmailTemplates } from "~/utils/email-templates";
 import type { EmailSenderProps, PdfLiveRef } from "~/utils/types";
+import type { PdfCompressRef, CompressionInfo } from "~/utils/types";
+import { PdfCompressUtils } from "~/utils/pdf-compress";
 
 export default function EmailSender({
   pdfBytes,
@@ -18,7 +20,11 @@ export default function EmailSender({
   const [isSending, setIsSending] = useState(false);
   const [mergedPdfBytes, setMergedPdfBytes] = useState<Uint8Array | null>(null);
   const [hasUploadedFile, setHasUploadedFile] = useState(false);
+  const [compressionInfo, setCompressionInfo] =
+    useState<CompressionInfo | null>(null);
 
+  // Ref para o componente de compressão
+  const pdfCompressRef = useRef<PdfCompressRef>(null);
   // Efeito para registrar callback do PdfMergeWithForm
   useEffect(() => {
     if (pdfMergeRef?.current && (pdfMergeRef.current as any).setOnFileChange) {
@@ -83,6 +89,15 @@ Sistema T-App`;
     return null;
   };
 
+  const arrayBufferToBase64 = (buffer: Uint8Array): string => {
+    let binary = "";
+    const bytes = new Uint8Array(buffer);
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  };
+
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -113,9 +128,10 @@ Sistema T-App`;
     }
 
     setIsSending(true);
+    setCompressionInfo(null);
 
     try {
-      // CORREÇÃO: Usar função separada para gerar PDF
+      // CORREÇÃO: Usar função separada para gerar PDF sem recursão
       let finalPdfBytes = await generatePdfIfNeeded();
       let isMerged = false;
 
@@ -139,16 +155,56 @@ Sistema T-App`;
         return;
       }
 
-      const pdfBase64 = btoa(
-        String.fromCharCode(...new Uint8Array(finalPdfBytes))
-      );
+      // VERIFICAR E COMPRIMIR PDF SE NECESSÁRIO
+      let pdfToSend = finalPdfBytes;
 
-      // USANDO O TEMPLATE SEPARADO
-      const emailHtml = emailTemplates.formEmail(
+      // Gerar o HTML do email para calcular tamanho total
+      const emailHtml = EmailTemplates.formEmail(
         emailData.subject,
         formData,
         emailData.message
       );
+
+      // CORREÇÃO: Usar o utilitário PdfCompressUtils
+      const needsCompression = PdfCompressUtils.needsCompression(
+        finalPdfBytes,
+        emailHtml
+      );
+
+      if (needsCompression) {
+        devLog.log(
+          "📦 PDF precisa de compressão para atender ao limite de 15MB"
+        );
+
+        // Comprimir o PDF usando o utilitário
+        const compressResult = await PdfCompressUtils.compressPdf(
+          finalPdfBytes,
+          setCompressionInfo // Callback para atualizar o estado
+        );
+
+        pdfToSend = compressResult.compressedBytes;
+
+        // Verificar se ainda está acima do limite após compressão
+        if (compressResult.info && !compressResult.info.success) {
+          alert(
+            `O PDF é muito grande (${(
+              compressResult.info.compressedSize /
+              1024 /
+              1024
+            ).toFixed(2)} MB) mesmo após compressão. ` +
+              `O limite total do Resend é 15MB (conteúdo + anexos). Por favor, reduza o tamanho do PDF anexado.`
+          );
+          setIsSending(false);
+          return;
+        }
+      } else {
+        devLog.log(
+          "✅ PDF está dentro dos limites, sem necessidade de compressão"
+        );
+      }
+
+      // CORREÇÃO: Usar função segura para converter para Base64
+      const pdfBase64 = arrayBufferToBase64(pdfToSend);
 
       const response = await fetch("/api/send-email", {
         method: "POST",
@@ -179,7 +235,7 @@ Sistema T-App`;
       }
 
       alert("Email enviado com sucesso!");
-      onEmailSent?.(finalPdfBytes);
+      onEmailSent?.(pdfToSend);
 
       // Limpar formulário
       setEmailData((prev) => ({

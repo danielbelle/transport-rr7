@@ -13,6 +13,7 @@ import type {
   FormData,
   PdfLiveRef,
   FlexibleFormData,
+  FieldConfig,
 } from "~/utils/types";
 import { fieldConfig } from "~/utils/fieldConfig";
 
@@ -54,6 +55,70 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
       }
     }, []);
 
+    // Função para converter data URL para Uint8Array
+    const dataUrlToUint8Array = (dataUrl: string): Uint8Array => {
+      const base64 = dataUrl.split(",")[1];
+      const binaryString = atob(base64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      return bytes;
+    };
+
+    // Função para adicionar imagem ao PDF
+    const addImageToPdf = async (
+      pdfDoc: PDFDocument,
+      imageData: string,
+      x: number,
+      y: number,
+      width: FieldConfig["width"] | undefined = 500,
+      height: FieldConfig["height"] | undefined = 100
+    ) => {
+      try {
+        // Converter data URL para Uint8Array
+        const imageBytes = dataUrlToUint8Array(imageData);
+
+        // Determinar o tipo de imagem baseado no data URL
+        let image;
+        if (imageData.startsWith("data:image/png")) {
+          image = await pdfDoc.embedPng(imageBytes);
+        } else if (
+          imageData.startsWith("data:image/jpeg") ||
+          imageData.startsWith("data:image/jpg")
+        ) {
+          image = await pdfDoc.embedJpg(imageBytes);
+        } else {
+          devLog.warn(
+            "Formato de imagem não suportado para assinatura:",
+            imageData.substring(0, 50)
+          );
+          return;
+        }
+
+        const pages = pdfDoc.getPages();
+        const page = pages[0];
+        const pageHeight = page.getHeight();
+
+        // Desenhar a imagem no PDF
+        page.drawImage(image, {
+          x: x,
+          y: pageHeight - y - height, // Ajustar coordenada Y (PDF-lib usa coordenadas de baixo para cima)
+          width: width,
+          height: height,
+        });
+
+        devLog.log("✅ Assinatura adicionada ao PDF:", {
+          x,
+          y: pageHeight - y - height,
+          width,
+          height,
+        });
+      } catch (error) {
+        devLog.error("❌ Erro ao adicionar assinatura ao PDF:", error);
+      }
+    };
+
     // Função para gerar o PDF com os dados atuais
     const generatePdfPreview = useCallback(async (): Promise<string | null> => {
       try {
@@ -69,20 +134,42 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
         // Desenhar texto nas posições definidas
         fieldConfig.forEach((field) => {
           if (field.type === "signature") {
-            // Ignorar assinaturas no PDF por enquanto
-            return;
-          }
-
-          const value = flexibleFormData[field.key];
-          if (value && value.trim() !== "") {
-            page.drawText(value, {
-              x: field.x,
-              y: pageHeight - field.y,
-              size: field.font,
-              color: rgb(0, 0, 0),
-            });
+            // Processar assinaturas separadamente
+            const signatureData = flexibleFormData[field.key];
+            if (signatureData && signatureData.startsWith("data:image/")) {
+              // A assinatura será adicionada posteriormente via addImageToPdf
+              return;
+            }
+          } else {
+            // Processar campos de texto normais
+            const value = flexibleFormData[field.key];
+            if (value && value.trim() !== "") {
+              page.drawText(value, {
+                x: field.x,
+                y: pageHeight - field.y,
+                size: field.font,
+                color: rgb(0, 0, 0),
+              });
+            }
           }
         });
+
+        // Adicionar assinaturas após o texto
+        for (const field of fieldConfig) {
+          if (field.type === "signature") {
+            const signatureData = flexibleFormData[field.key];
+            if (signatureData && signatureData.startsWith("data:image/")) {
+              await addImageToPdf(
+                pdfDoc,
+                signatureData,
+                field.x,
+                field.y,
+                field.width || 200,
+                field.height || 80
+              );
+            }
+          }
+        }
 
         const pdfBytes = await pdfDoc.save();
         currentPdfBytesRef.current = pdfBytes;
@@ -123,8 +210,12 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
 
         const flexibleFormData = formData as unknown as FlexibleFormData;
 
+        // Desenhar texto
         fieldConfig.forEach((field) => {
-          if (field.type === "signature") return;
+          if (field.type === "signature") {
+            // Assinaturas serão processadas separadamente
+            return;
+          }
 
           const value = flexibleFormData[field.key];
           if (value && value.trim() !== "") {
@@ -136,6 +227,23 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
             });
           }
         });
+
+        // Adicionar assinaturas
+        for (const field of fieldConfig) {
+          if (field.type === "signature") {
+            const signatureData = flexibleFormData[field.key];
+            if (signatureData && signatureData.startsWith("data:image/")) {
+              await addImageToPdf(
+                pdfDoc,
+                signatureData,
+                field.x,
+                field.y,
+                field.width || 200,
+                field.height || 80
+              );
+            }
+          }
+        }
 
         const pdfBytes = await pdfDoc.save();
         currentPdfBytesRef.current = pdfBytes;
@@ -251,10 +359,14 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
           <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-md border border-purple-200 dark:border-purple-800">
             <div className="text-sm text-purple-700 dark:text-purple-400 space-y-1">
               <div>
-                <strong>Template:</strong> sample.pdf
+                <strong>Template:</strong> sample-positions.pdf
               </div>
               <div>
-                <strong>Campos:</strong> Nome, RG, CPF
+                <strong>Campos:</strong> Nome, RG, CPF, Assinatura
+              </div>
+              <div>
+                <strong>Assinatura:</strong>{" "}
+                {formData.signature ? "✓ Incluída" : "⏳ Aguardando"}
               </div>
               <div>
                 <strong>Status:</strong>{" "}

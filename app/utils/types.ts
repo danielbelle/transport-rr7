@@ -121,3 +121,30 @@ export interface EmailSenderProps {
   pdfMergeRef?: React.RefObject<PdfMergeWithFormRef | null>;
   pdfLiveRef?: React.RefObject<PdfLiveRef | null>;
 }
+
+export interface PdfCompressRef {
+  compressPdf: (pdfBytes: Uint8Array) => Promise<Uint8Array>;
+  getCompressionInfo: () => CompressionInfo | null;
+  needsCompression: (
+    pdfBytes: Uint8Array,
+    emailHtml: string,
+    otherAttachments?: any[]
+  ) => boolean;
+}
+
+export interface PdfCompressProps {
+  onCompressionComplete?: (info: CompressionInfo) => void;
+}
+
+export interface CompressionInfo {
+  originalSize: number;
+  compressedSize: number;
+  compressionRatio: number;
+  success: boolean;
+  message: string;
+}
+
+export interface PdfCompressResult {
+  compressedBytes: Uint8Array;
+  info: CompressionInfo;
+}

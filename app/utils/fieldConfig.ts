@@ -41,10 +41,10 @@ export const fieldConfig: FieldConfig[] = [
     placeholder: "Clique para assinar",
     type: "signature",
     font: 0,
-    x: 250,
-    y: 500,
-    width: 300,
-    height: 100,
+    x: 100, // Posição X no PDF
+    y: 300, // Posição Y no PDF (ajuste conforme necessário)
+    width: 500, // Largura da assinatura no PDF
+    height: 100, // Altura da assinatura no PDF
     required: true,
   },
 ];
@@ -54,4 +54,5 @@ export const pdfFieldConfig: Record<string, { x: number; y: number }> = {
   text_nome: { x: 123, y: 131 },
   text_rg: { x: 261, y: 168 },
   text_cpf: { x: 100, y: 206 },
+  signature: { x: 100, y: 300 }, // Adicionar coordenadas da assinatura
 };

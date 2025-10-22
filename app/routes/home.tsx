@@ -43,8 +43,12 @@ export default function Home() {
         </div>
 
         {/* Formulário */}
-        <div className="mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <Form onFormDataChange={handleFormDataChange} />
+          <PdfMergeWithForm
+            ref={pdfMergeRef}
+            formPdfBytes={getCurrentPdfBytes()}
+          />
         </div>
 
         {/* Visualizações em Grid */}
@@ -55,11 +59,6 @@ export default function Home() {
 
         {/* Ferramentas de PDF - Fluxo Separado */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <PdfMergeWithForm
-            ref={pdfMergeRef}
-            formPdfBytes={getCurrentPdfBytes()}
-          />
-
           <EmailSender
             pdfBytes={getCurrentPdfBytes()}
             formData={formData}
