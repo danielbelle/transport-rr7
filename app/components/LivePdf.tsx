@@ -348,7 +348,7 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
           <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-md border border-purple-200 dark:border-purple-800">
             <div className="text-sm text-purple-700 dark:text-purple-400 space-y-1">
               <div>
-                <strong>Template:</strong> sample-positions.pdf
+                <strong>Template:</strong> sample.pdf
               </div>
               <div>
                 <strong>Campos:</strong> Nome, RG, CPF, Assinatura

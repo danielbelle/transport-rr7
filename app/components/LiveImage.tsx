@@ -12,7 +12,7 @@ export default function LiveImage({ formData }: LiveImageProps) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Configurações
-  const imageUrl = "/samples/sample750.png";
+  const imageUrl = "/samples/sample.png";
   const canvasWidth = 750;
   const canvasHeight = 750;
   const textColor = "#000000";

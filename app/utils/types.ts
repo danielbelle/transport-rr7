@@ -186,3 +186,11 @@ export interface PdfCompressRef {
 export interface PdfCompressProps {
   onCompressionComplete?: (info: CompressionInfo) => void;
 }
+
+// =============================================================================
+// UTILITÁRIO: PDF FORM EDIT
+// =============================================================================
+
+export interface PdfFormEditUtils {
+  generateFormPdf: (formData: FormData) => Promise<Uint8Array>;
+}

@@ -1,30 +1,30 @@
 import { useState, useRef, useEffect } from "react";
 import { devLog } from "~/utils/dev-log";
 import { EmailTemplates } from "~/utils/email-templates";
-import type { EmailSenderProps, PdfLiveRef } from "~/utils/types";
-import type { PdfCompressRef, CompressionInfo } from "~/utils/types";
+import { generateFormPdf } from "~/utils/pdf-form-edit";
 import { PdfCompressUtils } from "~/utils/pdf-compress";
+import type {
+  EmailSenderProps,
+  PdfMergeWithFormRef,
+  CompressionInfo,
+} from "~/utils/types";
 
 export default function EmailSender({
-  pdfBytes,
   formData,
   onEmailSent,
   pdfMergeRef,
-  pdfLiveRef,
-}: EmailSenderProps & { pdfLiveRef?: React.RefObject<PdfLiveRef | null> }) {
+}: EmailSenderProps) {
   const [emailData, setEmailData] = useState({
     to: "henrique.danielb@gmail.com",
     subject: "Formulário Preenchido com Anexo",
     message: "",
   });
   const [isSending, setIsSending] = useState(false);
-  const [mergedPdfBytes, setMergedPdfBytes] = useState<Uint8Array | null>(null);
   const [hasUploadedFile, setHasUploadedFile] = useState(false);
   const [compressionInfo, setCompressionInfo] =
     useState<CompressionInfo | null>(null);
+  const [currentStep, setCurrentStep] = useState<string>("");
 
-  // Ref para o componente de compressão
-  const pdfCompressRef = useRef<PdfCompressRef>(null);
   // Efeito para registrar callback do PdfMergeWithForm
   useEffect(() => {
     if (pdfMergeRef?.current && (pdfMergeRef.current as any).setOnFileChange) {
@@ -63,32 +63,6 @@ Sistema T-App`;
     }));
   };
 
-  // Função separada para gerar PDF sem recursão
-  const generatePdfIfNeeded = async (): Promise<Uint8Array | null> => {
-    if (pdfBytes) {
-      return pdfBytes;
-    }
-
-    if (pdfLiveRef?.current) {
-      devLog.log("🔄 Gerando PDF antes do envio...");
-      try {
-        const generatedPdf = await pdfLiveRef.current.generatePdf();
-        if (generatedPdf) {
-          devLog.log(
-            "✅ PDF gerado com sucesso:",
-            generatedPdf.length,
-            "bytes"
-          );
-          return generatedPdf;
-        }
-      } catch (error) {
-        devLog.error("Erro ao gerar PDF:", error);
-      }
-    }
-
-    return null;
-  };
-
   const arrayBufferToBase64 = (buffer: Uint8Array): string => {
     let binary = "";
     const bytes = new Uint8Array(buffer);
@@ -98,112 +72,128 @@ Sistema T-App`;
     return btoa(binary);
   };
 
+  const validateFormData = (): boolean => {
+    if (!formData.text_nome?.trim()) {
+      throw new Error("Campo 'Nome' não preenchido");
+    }
+    if (!formData.text_rg?.trim()) {
+      throw new Error("Campo 'RG' não preenchido");
+    }
+    if (!formData.text_cpf?.trim()) {
+      throw new Error("Campo 'CPF' não preenchido");
+    }
+    if (!formData.signature) {
+      throw new Error("Assinatura não realizada");
+    }
+    return true;
+  };
+
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!emailData.to || !emailData.subject || !emailData.message) {
-      alert("Preencha todos os campos obrigatórios do email");
-      return;
-    }
-
-    // Verificação direta e simples do anexo
-    const hasFormPdf = !!pdfBytes;
-    const hasExternalPdf = pdfMergeRef?.current ? hasUploadedFile : false;
-    const canSend = pdfMergeRef?.current
-      ? hasFormPdf && hasExternalPdf
-      : hasFormPdf;
-
-    if (!canSend) {
-      let errorMessage = "Nenhum anexo disponível para enviar.";
-
-      if (!pdfBytes) {
-        errorMessage += " Preencha o formulário para gerar o PDF.";
-      } else if (pdfMergeRef?.current && !hasExternalPdf) {
-        errorMessage +=
-          " Selecione um PDF para anexar no componente 'Mesclar PDFs'.";
-      }
-
-      alert(errorMessage);
-      return;
-    }
-
     setIsSending(true);
     setCompressionInfo(null);
+    setCurrentStep("");
 
     try {
-      // Usar função separada para gerar PDF sem recursão
-      let finalPdfBytes = await generatePdfIfNeeded();
+      // ETAPA 1: Validação
+      setCurrentStep("Validando formulário...");
+      if (!emailData.to || !emailData.subject || !emailData.message) {
+        throw new Error("Preencha todos os campos obrigatórios do email");
+      }
+
+      if (pdfMergeRef?.current && !hasUploadedFile) {
+        throw new Error(
+          "Selecione um PDF para anexar no componente 'Mesclar PDFs'"
+        );
+      }
+
+      validateFormData();
+
+      // ETAPA 2: Geração do PDF
+      setCurrentStep("Gerando PDF do formulário...");
+      let formPdfBytes: Uint8Array;
+      try {
+        formPdfBytes = await generateFormPdf(formData);
+        devLog.log(
+          "✅ PDF do formulário gerado:",
+          formPdfBytes.length,
+          "bytes"
+        );
+      } catch (error) {
+        throw new Error(
+          `Erro na geração do PDF: ${
+            error instanceof Error ? error.message : "Erro desconhecido"
+          }`
+        );
+      }
+
+      // ETAPA 3: Merge de PDFs (se aplicável)
+      setCurrentStep("Mesclando PDFs...");
+      let finalPdfBytes = formPdfBytes;
       let isMerged = false;
 
-      // Se houver referência para o merge e arquivo selecionado, realizar merge
-      if (pdfMergeRef?.current && hasExternalPdf && finalPdfBytes) {
-        devLog.log("Realizando merge antes do envio...");
-        const mergedBytes = await pdfMergeRef.current.performMerge();
-        if (mergedBytes) {
-          finalPdfBytes = mergedBytes;
-          setMergedPdfBytes(mergedBytes);
-          isMerged = true;
-          devLog.log("Merge realizado com sucesso!");
-        } else {
-          devLog.log("Merge não realizado, usando PDF original");
+      if (pdfMergeRef?.current && hasUploadedFile) {
+        try {
+          const mergedBytes = await pdfMergeRef.current.performMerge();
+          if (mergedBytes) {
+            finalPdfBytes = mergedBytes;
+            isMerged = true;
+            devLog.log("✅ Merge de PDFs realizado com sucesso!");
+          }
+        } catch (error) {
+          throw new Error(
+            `Erro no merge de PDFs: ${
+              error instanceof Error ? error.message : "Erro desconhecido"
+            }`
+          );
         }
       }
 
-      if (!finalPdfBytes) {
-        alert("Nenhum PDF disponível para enviar");
-        setIsSending(false);
-        return;
-      }
-
-      // VERIFICAR E COMPRIMIR PDF SE NECESSÁRIO
+      // ETAPA 4: Compressão
+      setCurrentStep("Verificando compressão...");
       let pdfToSend = finalPdfBytes;
-
-      // Gerar o HTML do email para calcular tamanho total
       const emailHtml = EmailTemplates.formEmail(
         emailData.subject,
         formData,
         emailData.message
       );
 
-      // Usar o utilitário PdfCompressUtils
       const needsCompression = PdfCompressUtils.needsCompression(
         finalPdfBytes,
         emailHtml
       );
 
       if (needsCompression) {
-        devLog.log(
-          "📦 PDF precisa de compressão para atender ao limite de 15MB"
-        );
-
-        // Comprimir o PDF usando o utilitário
-        const compressResult = await PdfCompressUtils.compressPdf(
-          finalPdfBytes,
-          setCompressionInfo // Callback para atualizar o estado
-        );
-
-        pdfToSend = compressResult.compressedBytes;
-
-        // Verificar se ainda está acima do limite após compressão
-        if (compressResult.info && !compressResult.info.success) {
-          alert(
-            `O PDF é muito grande (${(
-              compressResult.info.compressedSize /
-              1024 /
-              1024
-            ).toFixed(2)} MB) mesmo após compressão. ` +
-              `O limite total do Resend é 15MB (conteúdo + anexos). Por favor, reduza o tamanho do PDF anexado.`
+        setCurrentStep("Comprimindo PDF...");
+        try {
+          const compressResult = await PdfCompressUtils.compressPdf(
+            finalPdfBytes,
+            setCompressionInfo
           );
-          setIsSending(false);
-          return;
+
+          pdfToSend = compressResult.compressedBytes;
+
+          if (compressResult.info && !compressResult.info.success) {
+            throw new Error(
+              `O PDF é muito grande (${(
+                compressResult.info.compressedSize /
+                1024 /
+                1024
+              ).toFixed(2)} MB) mesmo após compressão. ` +
+                `O limite total do Resend é 15MB. Por favor, reduza o tamanho do PDF anexado.`
+            );
+          }
+        } catch (error) {
+          throw new Error(
+            `Erro na compressão: ${
+              error instanceof Error ? error.message : "Erro desconhecido"
+            }`
+          );
         }
-      } else {
-        devLog.log(
-          "✅ PDF está dentro dos limites, sem necessidade de compressão"
-        );
       }
 
-      // Usar função segura para converter para Base64
+      // ETAPA 5: Envio do Email
+      setCurrentStep("Enviando email...");
       const pdfBase64 = arrayBufferToBase64(pdfToSend);
 
       const response = await fetch("/api/send-email", {
@@ -234,6 +224,7 @@ Sistema T-App`;
         throw new Error(result.error || "Erro ao enviar email");
       }
 
+      // SUCESSO
       alert("Email enviado com sucesso!");
       onEmailSent?.(pdfToSend);
 
@@ -244,17 +235,20 @@ Sistema T-App`;
         message: "",
       }));
     } catch (error) {
-      devLog.error("Erro no envio de email:", error);
-      alert("Erro ao enviar email. Tente novamente.");
+      // TRATAMENTO DE ERROS ESPECÍFICOS
+      const errorMessage =
+        error instanceof Error ? error.message : "Erro desconhecido";
+      devLog.error(`❌ Erro no envio (etapa: ${currentStep}):`, error);
+
+      alert(`Erro: ${errorMessage}`);
     } finally {
       setIsSending(false);
+      setCurrentStep("");
     }
   };
 
-  // Status do anexo para display (apenas visual)
-  const hasAttachment = pdfMergeRef?.current
-    ? !!pdfBytes && hasUploadedFile
-    : !!pdfBytes;
+  // Status do anexo para display
+  const hasAttachment = pdfMergeRef?.current ? hasUploadedFile : true; // Sempre tem o PDF do formulário
 
   return (
     <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
@@ -263,6 +257,7 @@ Sistema T-App`;
       </h2>
 
       <form onSubmit={handleSendEmail} className="space-y-4">
+        {/* Campos do email (mantidos iguais) */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Para *
@@ -344,21 +339,8 @@ Sistema T-App`;
             }`}
           >
             <div>
-              <strong>Arquivo:</strong>{" "}
-              {mergedPdfBytes
-                ? "formulario-com-anexo.pdf"
-                : "formulario-preenchido.pdf"}
+              <strong>Formulário:</strong> ✓ Pronto para geração
             </div>
-            <div>
-              <strong>Status:</strong>{" "}
-              {hasAttachment ? "Pronto para envio" : "Nenhum anexo disponível"}
-            </div>
-            {pdfBytes && (
-              <div>
-                <strong>Formulário:</strong> ✓ Pronto (
-                {(pdfBytes.length / 1024).toFixed(2)} KB)
-              </div>
-            )}
             {pdfMergeRef && (
               <div>
                 <strong>PDF Anexado:</strong>{" "}
@@ -368,17 +350,12 @@ Sistema T-App`;
             {pdfMergeRef && (
               <div>
                 <strong>Merge:</strong>{" "}
-                {mergedPdfBytes ? "✓ Realizado" : "⏳ Será realizado no envio"}
+                {hasUploadedFile ? "✓ Será realizado" : "⏳ Não necessário"}
               </div>
             )}
-            {pdfMergeRef && !hasUploadedFile && (
-              <div className="text-red-600 dark:text-red-400 mt-2">
-                ⚠️ Selecione um PDF para anexar no componente "Mesclar PDFs"
-              </div>
-            )}
-            {!pdfBytes && (
-              <div className="text-red-600 dark:text-red-400 mt-2">
-                ⚠️ Preencha o formulário para gerar o PDF
+            {currentStep && (
+              <div className="text-blue-600 dark:text-blue-400 mt-2">
+                🔄 {currentStep}
               </div>
             )}
           </div>
@@ -389,7 +366,9 @@ Sistema T-App`;
           disabled={isSending || !hasAttachment}
           className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-md font-medium transition-colors"
         >
-          {isSending ? "📧 Enviando Email..." : "📧 Enviar Documento por Email"}
+          {isSending
+            ? `📧 ${currentStep || "Enviando..."}`
+            : "📧 Enviar Documento por Email"}
         </button>
 
         {!hasAttachment && (
@@ -413,6 +392,10 @@ Sistema T-App`;
           </div>
           <div>
             <strong>CPF:</strong> {formData.text_cpf || "Não preenchido"}
+          </div>
+          <div>
+            <strong>Assinatura:</strong>{" "}
+            {formData.signature ? "✓ Pronta" : "⏳ Pendente"}
           </div>
         </div>
       </div>
