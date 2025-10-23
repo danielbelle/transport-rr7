@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import type { FileUploadProps } from "~/utils/types";
+import type { FileUploadProps } from "~/lib/types";
 
 export function FileUpload({
   onFileSelect,

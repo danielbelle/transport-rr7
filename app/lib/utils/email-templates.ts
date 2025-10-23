@@ -1,10 +1,3 @@
-/**
- * Templates de email para envio de formulários
- * @param subject Assunto do email
- * @param formData Dados do formulário preenchido
- * @param message Mensagem personalizada do email
- * @returns HTML formatado do email
- */
 export const EmailTemplates = {
   formEmail: (subject: string, formData: any, message: string) => `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

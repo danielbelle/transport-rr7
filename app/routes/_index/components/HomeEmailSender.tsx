@@ -1,13 +1,10 @@
 import { useState } from "react";
-import { EmailTemplates } from "~/utils/email-templates";
-import { generateFormPdf } from "~/utils/pdf-form-edit";
-import { PdfCompressUtils } from "~/utils/pdf-compress";
-import { PdfMergeUtils } from "~/utils/pdf-merge";
-import type { EmailSenderProps, CompressionInfo } from "~/utils/types";
+import { EmailTemplates } from "~/lib/utils/email-templates";
 import { FileUpload } from "~/components/ui/FileUpload";
-import { useDocumentStore } from "~/stores/document-store";
+import { useDocumentStore } from "~/lib/stores/document-store";
+import type { EmailSenderProps, CompressionInfo } from "~/lib/types";
 
-export default function EmailSender({
+export default function HomeEmailSender({
   formData,
   onEmailSent,
 }: EmailSenderProps) {
@@ -21,7 +18,6 @@ export default function EmailSender({
     useState<CompressionInfo | null>(null);
   const [currentStep, setCurrentStep] = useState<string>("");
 
-  // Usando o store
   const {
     uploadedFile,
     setUploadedFile,
@@ -102,12 +98,13 @@ Sistema T-App`;
       }
       validateFormData();
 
-      // ETAPA 2: Geração do PDF
+      // ETAPA 2: Geração do PDF (lazy loading)
       setCurrentStep("Gerando PDF do formulário...");
       let formPdfBytes: Uint8Array;
       try {
+        const { generateFormPdf } = await import("~/lib/utils/pdf-form-edit");
         formPdfBytes = await generateFormPdf(formData);
-        setPdfBytes(formPdfBytes); // Salva no store
+        setPdfBytes(formPdfBytes);
       } catch (error) {
         throw new Error(
           `Erro na geração do PDF: ${
@@ -116,13 +113,14 @@ Sistema T-App`;
         );
       }
 
-      // ETAPA 3: Merge de PDFs (se aplicável)
+      // ETAPA 3: Merge de PDFs (lazy loading)
       let finalPdfBytes = formPdfBytes;
       let isMerged = false;
 
       if (uploadedFile) {
         setCurrentStep("Mesclando PDFs...");
         try {
+          const { PdfMergeUtils } = await import("~/lib/utils/pdf-merge");
           const uploadedPdfBytes = await uploadedFile.arrayBuffer();
           const mergeResult = await PdfMergeUtils.mergePdfs(
             formPdfBytes,
@@ -139,7 +137,7 @@ Sistema T-App`;
         }
       }
 
-      // ETAPA 4: Compressão
+      // ETAPA 4: Compressão (lazy loading)
       setCurrentStep("Verificando compressão...");
       let pdfToSend = finalPdfBytes;
       const emailHtml = EmailTemplates.formEmail(
@@ -148,6 +146,7 @@ Sistema T-App`;
         emailData.message
       );
 
+      const { PdfCompressUtils } = await import("~/lib/utils/pdf-compress");
       const needsCompression = PdfCompressUtils.needsCompression(
         finalPdfBytes,
         emailHtml
@@ -235,7 +234,6 @@ Sistema T-App`;
     }
   };
 
-  // Status do anexo para display
   const hasFormData =
     formData.text_nome &&
     formData.text_rg &&
@@ -249,7 +247,6 @@ Sistema T-App`;
       </h2>
 
       <form onSubmit={handleSendEmail} className="space-y-4">
-        {/* Campos do email (mantidos iguais) */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Para *
@@ -304,7 +301,6 @@ Sistema T-App`;
           />
         </div>
 
-        {/* Componente de Upload integrado */}
         <FileUpload
           onFileSelect={handleFileSelect}
           accept=".pdf"

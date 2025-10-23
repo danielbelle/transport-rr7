@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
-import type { FormSignatureProps } from "~/utils/types";
+import type { FormSignatureProps } from "~/lib/types";
 
 export const FormSignature: React.FC<FormSignatureProps> = ({
   field,

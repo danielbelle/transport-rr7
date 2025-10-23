@@ -1,12 +1,12 @@
 import { useState } from "react";
-import type { Route } from "./+types/home";
-import EmailSender from "~/components/EmailSender";
-import Form from "~/components/Form";
-import LiveImage from "~/components/LiveImage";
-import type { FormData } from "~/utils/types";
-import { useDocumentStore } from "~/stores/document-store";
+import type { Route } from ".rr/routes/_index/+types/route";
+import HomeForm from "./components/HomeForm";
+import HomeEmailSender from "./components/HomeEmailSender";
+import HomeLiveImage from "./components/HomeLiveImage";
+import type { FormData } from "~/lib/types";
+import { useDocumentStore } from "~/lib/stores/document-store";
 
-export default function Home() {
+export default function HomePage() {
   const [formData, setFormData] = useState<FormData>({
     text_nome: "",
     text_rg: "",
@@ -15,18 +15,15 @@ export default function Home() {
   });
 
   const { currentStep, setCurrentStep } = useDocumentStore();
-
   const [isFormComplete, setIsFormComplete] = useState(false);
 
   const handleFormDataChange = (data: FormData) => {
     setFormData(data);
-
     const isComplete =
       data.text_nome?.trim() !== "" &&
       data.text_rg?.trim() !== "" &&
       data.text_cpf?.trim() !== "" &&
       data.signature?.trim() !== "";
-
     setIsFormComplete(isComplete);
   };
 
@@ -50,11 +47,10 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Formulário ou EmailSender baseado no step */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {currentStep === "email" ? (
             <div className="space-y-4">
-              <EmailSender
+              <HomeEmailSender
                 formData={formData}
                 onEmailSent={() => setCurrentStep("form")}
               />
@@ -67,7 +63,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="space-y-4">
-              <Form onFormDataChange={handleFormDataChange} />
+              <HomeForm onFormDataChange={handleFormDataChange} />
               {isFormComplete && (
                 <button
                   onClick={handleShowEmailSender}
@@ -79,10 +75,9 @@ export default function Home() {
             </div>
           )}
 
-          <LiveImage formData={formData} />
+          <HomeLiveImage formData={formData} />
         </div>
 
-        {/* Status do Formulário */}
         {currentStep === "form" && (
           <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
             <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">
@@ -90,7 +85,7 @@ export default function Home() {
             </h3>
             <div className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
               <div>
-                <strong>Nome:</strong>
+                <strong>Nome:</strong>{" "}
                 {formData.text_nome || "❌ Não preenchido"}
               </div>
               <div>
@@ -100,7 +95,7 @@ export default function Home() {
                 <strong>CPF:</strong> {formData.text_cpf || "❌ Não preenchido"}
               </div>
               <div>
-                <strong>Assinatura:</strong>
+                <strong>Assinatura:</strong>{" "}
                 {formData.signature ? "✅ Preenchida" : "❌ Pendente"}
               </div>
               <div

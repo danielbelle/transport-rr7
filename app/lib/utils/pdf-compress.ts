@@ -1,5 +1,5 @@
 import { PDFDocument } from "pdf-lib";
-import type { PdfCompressResult, CompressionInfo } from "~/utils/types";
+import type { PdfCompressResult, CompressionInfo } from "~/lib/types";
 
 /**
  * Calcula o tamanho estimado do email incluindo HTML e anexos

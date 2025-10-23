@@ -1,62 +1,58 @@
 import React, { useState, useRef, useEffect } from "react";
 import { CanvasPreview } from "~/components/ui/CanvasPreview";
-import { fieldConfig } from "~/utils/field-config";
+import { homeFieldConfig } from "../utils/home-field-config";
+import { useDocumentStore } from "~/lib/stores/document-store";
 import type {
   TextOverlay,
   LiveImageProps,
   FlexibleFormData,
-} from "~/utils/types";
+} from "~/lib/types";
 
-export default function LiveImage({ formData }: LiveImageProps) {
+export default function HomeLiveImage({ formData }: LiveImageProps) {
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Configurações
   const imageUrl = "/samples/sample.png";
   const canvasWidth = 750;
   const canvasHeight = 750;
   const textColor = "#000000";
   const timeDebounce = 400;
 
-  // Função para criar overlay de texto (usa configurações de IMAGEM)
   function createTextOverlay(
-    field: (typeof fieldConfig)[number],
+    field: (typeof homeFieldConfig)[number],
     value: string
   ): TextOverlay {
     return {
       id: field.key,
       text: value,
-      x: field.x, // Usa x da imagem
-      y: field.y, // Usa y da imagem
-      fontSize: field.font, // Usa font da imagem
+      x: field.x,
+      y: field.y,
+      fontSize: field.font,
       color: textColor,
       fieldKey: field.key,
       type: "text",
     };
   }
 
-  // Função para criar overlay de assinatura (usa configurações de IMAGEM)
   function createSignatureOverlay(
-    field: (typeof fieldConfig)[number],
+    field: (typeof homeFieldConfig)[number],
     imageData: string
   ): TextOverlay {
     return {
       id: `${field.key}-${Date.now()}`,
       text: "",
-      x: field.x, // Usa x da imagem
-      y: field.y, // Usa y da imagem
+      x: field.x,
+      y: field.y,
       fontSize: 0,
       color: textColor,
       fieldKey: field.key,
       type: "signature",
       imageData,
-      // ADICIONAR: Usar width e height da configuração do campo
-      width: field.width || 300, // Valor padrão de fallback
-      height: field.height || 100, // Valor padrão de fallback
+      width: field.width || 300,
+      height: field.height || 100,
     };
   }
 
-  // Atualizar overlays quando formData mudar com debounce
   useEffect(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -73,18 +69,15 @@ export default function LiveImage({ formData }: LiveImageProps) {
     };
   }, [formData]);
 
-  // Atualiza todos os overlays da imagem
   function updateImageOverlays() {
-    // Converter FormData para FlexibleFormData usando type assertion
     const flexibleFormData = formData as unknown as FlexibleFormData;
 
-    const overlays = fieldConfig
+    const overlays = homeFieldConfig
       .filter((field) => !field.hidden)
       .map((field) => {
         const value = flexibleFormData[field.key] || "";
 
         if (field.type === "signature") {
-          // Verificar se é uma data URL de assinatura
           if (value && value.startsWith("data:image/")) {
             return createSignatureOverlay(field, value);
           }
@@ -105,7 +98,6 @@ export default function LiveImage({ formData }: LiveImageProps) {
       </h2>
 
       <div className="space-y-4">
-        {/* Preview da Imagem */}
         <CanvasPreview
           imageUrl={imageUrl}
           canvasWidth={canvasWidth}

@@ -1,6 +1,6 @@
 import { PDFDocument, rgb } from "pdf-lib";
-import { fieldConfig } from "~/utils/field-config";
-import type { FormData, FlexibleFormData, FieldConfig } from "~/utils/types";
+import { homeFieldConfig } from "~/routes/_index/utils/home-field-config";
+import type { FormData, FlexibleFormData, FieldConfig } from "~/lib/types";
 
 /**
  * Gera PDF editado com os dados do formulário (versão utilitária do LivePdf)
@@ -20,7 +20,7 @@ export async function generateFormPdf(formData: FormData): Promise<Uint8Array> {
     const flexibleFormData = formData as unknown as FlexibleFormData;
 
     // Processar campos de texto
-    fieldConfig.forEach((field) => {
+    homeFieldConfig.forEach((field) => {
       if (field.type === "signature") return; // Assinaturas processadas separadamente
 
       const value = flexibleFormData[field.key];
@@ -39,7 +39,7 @@ export async function generateFormPdf(formData: FormData): Promise<Uint8Array> {
     });
 
     // Processar assinaturas
-    const signaturePromises = fieldConfig
+    const signaturePromises = homeFieldConfig
       .filter((field) => field.type === "signature")
       .map(async (field) => {
         const signatureData = flexibleFormData[field.key];

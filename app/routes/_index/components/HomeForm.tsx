@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { FormInput } from "~/components/ui/FormInput";
 import { FormSignature } from "~/components/ui/FormSignature";
-import { fieldConfig } from "~/utils/field-config";
-import type { FormProps, FormData, FlexibleFormData } from "~/utils/types";
+import { homeFieldConfig } from "../utils/home-field-config";
+import type { FormProps, FormData, FlexibleFormData } from "~/lib/types";
+import { useDocumentStore } from "~/lib/stores/document-store";
 
-export default function Form({ onFormDataChange, initialData }: FormProps) {
-  // Inicializar com valores padrão que satisfazem FlexibleFormData
+export default function HomeForm({ onFormDataChange, initialData }: FormProps) {
   const [formData, setFormData] = useState<FlexibleFormData>({
     text_nome: initialData?.text_nome || "",
     text_rg: initialData?.text_rg || "",
@@ -18,10 +18,8 @@ export default function Form({ onFormDataChange, initialData }: FormProps) {
       ...formData,
       [fieldKey]: value,
     };
-
     setFormData(newData);
 
-    // Converter para FormData antes de notificar
     const formDataToSend: FormData = {
       text_nome: newData.text_nome,
       text_rg: newData.text_rg,
@@ -39,10 +37,8 @@ export default function Form({ onFormDataChange, initialData }: FormProps) {
       ...formData,
       [fieldKey]: signatureData || "",
     };
-
     setFormData(newData);
 
-    // Converter para FormData antes de notificar
     const formDataToSend: FormData = {
       text_nome: newData.text_nome,
       text_rg: newData.text_rg,
@@ -52,7 +48,6 @@ export default function Form({ onFormDataChange, initialData }: FormProps) {
     onFormDataChange?.(formDataToSend);
   };
 
-  // Notificar mudanças iniciais
   useEffect(() => {
     const initialFormData: FormData = {
       text_nome: formData.text_nome,
@@ -70,7 +65,7 @@ export default function Form({ onFormDataChange, initialData }: FormProps) {
       </h2>
 
       <form className="space-y-6">
-        {fieldConfig
+        {homeFieldConfig
           .filter((field) => !field.hidden)
           .map((field) => {
             if (field.type === "signature") {
@@ -94,7 +89,6 @@ export default function Form({ onFormDataChange, initialData }: FormProps) {
           })}
       </form>
 
-      {/* Informações do Formulário */}
       <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-md border border-blue-200 dark:border-blue-800">
         <h4 className="font-medium text-blue-800 dark:text-blue-300 mb-2">
           Dados Preenchidos:
@@ -110,7 +104,7 @@ export default function Form({ onFormDataChange, initialData }: FormProps) {
             <strong>CPF:</strong> {formData.text_cpf || "[Não preenchido]"}
           </div>
           <div>
-            <strong>Assinatura:</strong>
+            <strong>Assinatura:</strong>{" "}
             {formData.signature ? "✓ Preenchida" : "[Não assinado]"}
           </div>
         </div>

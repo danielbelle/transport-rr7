@@ -1,5 +1,5 @@
 import { PDFDocument } from "pdf-lib";
-import type { PdfMergeResult } from "~/utils/types";
+import type { PdfMergeResult } from "~/lib/types";
 
 /**
  * Utilitários para merge de PDFs

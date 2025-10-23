@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import type { FormData } from "~/utils/types";
 
 type DocumentStep = "form" | "preview" | "email";
 
