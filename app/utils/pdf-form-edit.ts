@@ -38,7 +38,7 @@ export async function generateFormPdf(formData: FormData): Promise<Uint8Array> {
       }
     });
 
-    // Processar assinaturas - CORREÇÃO AQUI
+    // Processar assinaturas
     const signaturePromises = fieldConfig
       .filter((field) => field.type === "signature")
       .map(async (field) => {
@@ -65,6 +65,7 @@ export async function generateFormPdf(formData: FormData): Promise<Uint8Array> {
 
 /**
  * Carrega o template PDF uma vez (com cache)
+ * @returns Promise<ArrayBuffer> Bytes do template PDF
  */
 async function loadPdfTemplate(): Promise<ArrayBuffer> {
   try {
@@ -88,7 +89,11 @@ async function loadPdfTemplate(): Promise<ArrayBuffer> {
 }
 
 /**
- * Adiciona assinatura ao PDF - CORREÇÃO AQUI
+ * Adiciona assinatura ao PDF
+ * @param pdfDoc Documento PDF
+ * @param imageData Data URL da imagem da assinatura
+ * @param field Configuração do campo de assinatura
+ * @returns Promise<void>
  */
 async function addSignatureToPdf(
   pdfDoc: PDFDocument,
@@ -146,6 +151,8 @@ async function addSignatureToPdf(
 
 /**
  * Converte data URL para Uint8Array
+ * @param dataUrl Data URL da imagem
+ * @returns Uint8Array com bytes da imagem
  */
 function dataUrlToUint8Array(dataUrl: string): Uint8Array {
   try {
@@ -168,6 +175,9 @@ function dataUrlToUint8Array(dataUrl: string): Uint8Array {
   }
 }
 
+/**
+ * Utilitários para edição de formulários em PDF
+ */
 export const PdfFormEdit = {
   generateFormPdf,
 };

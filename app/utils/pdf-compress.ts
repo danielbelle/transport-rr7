@@ -1,7 +1,12 @@
 import { PDFDocument } from "pdf-lib";
 import type { PdfCompressResult, CompressionInfo } from "~/utils/types";
 
-// Calcular tamanho estimado do email (HTML + outros conteúdos)
+/**
+ * Calcula o tamanho estimado do email incluindo HTML e anexos
+ * @param htmlContent Conteúdo HTML do email
+ * @param attachments Lista de anexos do email
+ * @returns Tamanho total em bytes
+ */
 export const calculateEmailSize = (
   htmlContent: string,
   attachments: any[] = []
@@ -17,7 +22,13 @@ export const calculateEmailSize = (
   return htmlSize + attachmentsSize + overhead;
 };
 
-// Verificar se precisa de compressão considerando o limite total de 15MB
+/**
+ * Verifica se o PDF precisa de compressão considerando o limite total de 15MB
+ * @param pdfBytes Bytes do PDF a ser verificado
+ * @param emailHtml Conteúdo HTML do email
+ * @param otherAttachments Outros anexos do email
+ * @returns true se precisa de compressão, false caso contrário
+ */
 export const needsCompression = (
   pdfBytes: Uint8Array,
   emailHtml: string,
@@ -31,7 +42,11 @@ export const needsCompression = (
   return totalSize > limitBytes;
 };
 
-// Compressão básica - re-salvar o PDF com otimizações
+/**
+ * Compressão básica do PDF - re-salva com otimizações
+ * @param pdfBytes Bytes do PDF original
+ * @returns Bytes do PDF comprimido
+ */
 export const compressPdfBasic = async (
   pdfBytes: Uint8Array
 ): Promise<Uint8Array> => {
@@ -52,7 +67,12 @@ export const compressPdfBasic = async (
   }
 };
 
-// Função principal de compressão
+/**
+ * Função principal de compressão de PDF com callback de progresso
+ * @param pdfBytes Bytes do PDF original
+ * @param onProgress Callback para informações de progresso da compressão
+ * @returns Objeto com bytes comprimidos e informações da compressão
+ */
 export const compressPdf = async (
   pdfBytes: Uint8Array,
   onProgress?: (info: CompressionInfo) => void
@@ -115,7 +135,9 @@ export const compressPdf = async (
   }
 };
 
-// Exportar todas as funções como um objeto utilitário
+/**
+ * Utilitários de compressão de PDF
+ */
 export const PdfCompressUtils = {
   compressPdf,
   compressPdfBasic,
