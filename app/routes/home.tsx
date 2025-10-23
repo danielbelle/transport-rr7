@@ -94,13 +94,6 @@ export default function Home() {
           )}
 
           <LiveImage formData={formData} />
-          <EmailSender
-            pdfBytes={getCurrentPdfBytes()}
-            formData={formData}
-            onEmailSent={handleEmailSent}
-            pdfMergeRef={pdfMergeRef}
-            pdfLiveRef={pdfLiveRef}
-          />
         </div>
 
         {/* Status do Formulário */}
