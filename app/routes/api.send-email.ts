@@ -1,12 +1,11 @@
 import { Resend } from "resend";
 import type { ActionFunctionArgs } from "react-router";
-import { devLog } from "~/utils/dev-log";
 
 // Acessa a variável de ambiente diretamente
 const resendApiKey = process.env.RESEND_API_KEY;
 // Verifica se a chave da API está configurada
 if (!resendApiKey) {
-  throw new Error("RESEND_API_KEY não configurada");
+  throw new Error("API não configurada");
 }
 // Inicializa o cliente Resend
 const resend = new Resend(resendApiKey);
@@ -25,7 +24,6 @@ export async function action({ request }: ActionFunctionArgs) {
     });
     // Trata erros específicos do Resend
     if (error) {
-      devLog.error("Erro Resend:", error);
       return new Response(JSON.stringify({ error: error.message }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
@@ -37,7 +35,6 @@ export async function action({ request }: ActionFunctionArgs) {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    devLog.error("Erro geral:", error);
     // Trata erros gerais
     return new Response(JSON.stringify({ error: "Erro interno do servidor" }), {
       status: 500,

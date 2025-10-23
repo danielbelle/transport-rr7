@@ -1,21 +1,34 @@
 import { useState } from "react";
-import { devLog } from "~/utils/dev-log";
-
-interface EmailSenderProps {
-  defaultRecipient?: string;
-  onEmailSent?: (result: any) => void;
-}
+import { EmailTemplates } from "~/utils/email-templates";
+import { generateFormPdf } from "~/utils/pdf-form-edit";
+import { PdfCompressUtils } from "~/utils/pdf-compress";
+import { PdfMergeUtils } from "~/utils/pdf-merge";
+import type { EmailSenderProps, CompressionInfo } from "~/utils/types";
+import { FileUpload } from "~/components/ui/FileUpload";
+import { useDocumentStore } from "~/stores/document-store";
 
 export default function EmailSender({
-  defaultRecipient = "henrique.danielb@gmail.com",
+  formData,
   onEmailSent,
 }: EmailSenderProps) {
   const [emailData, setEmailData] = useState({
-    to: defaultRecipient,
-    subject: "",
+    to: "henrique.danielb@gmail.com",
+    subject: "Formulário Preenchido com Anexo",
     message: "",
   });
-  const [isSending, setIsSending] = useState(false);
+
+  const [compressionInfo, setCompressionInfo] =
+    useState<CompressionInfo | null>(null);
+  const [currentStep, setCurrentStep] = useState<string>("");
+
+  // Usando o store
+  const {
+    uploadedFile,
+    setUploadedFile,
+    isSendingEmail,
+    setIsSendingEmail,
+    setPdfBytes,
+  } = useDocumentStore();
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -27,17 +40,153 @@ export default function EmailSender({
     }));
   };
 
+  const generateDefaultMessage = () => {
+    const message = `Prezados,
+
+Segue em anexo o formulário preenchido com os seguintes dados:
+
+• Nome: ${formData.text_nome || "Não informado"}
+• RG: ${formData.text_rg || "Não informado"} 
+• CPF: ${formData.text_cpf || "Não informado"}
+
+Atenciosamente,
+Sistema T-App`;
+
+    setEmailData((prev) => ({
+      ...prev,
+      message,
+    }));
+  };
+
+  const arrayBufferToBase64 = (buffer: Uint8Array): string => {
+    let binary = "";
+    const bytes = new Uint8Array(buffer);
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  };
+
+  const validateFormData = (): boolean => {
+    if (!formData.text_nome?.trim()) {
+      throw new Error("Campo 'Nome' não preenchido");
+    }
+    if (!formData.text_rg?.trim()) {
+      throw new Error("Campo 'RG' não preenchido");
+    }
+    if (!formData.text_cpf?.trim()) {
+      throw new Error("Campo 'CPF' não preenchido");
+    }
+    if (!formData.signature) {
+      throw new Error("Assinatura não realizada");
+    }
+    return true;
+  };
+
+  const handleFileSelect = (file: File | null) => {
+    setUploadedFile(file);
+  };
+
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!emailData.to || !emailData.subject || !emailData.message) {
-      alert("Preencha todos os campos obrigatórios");
-      return;
-    }
-
-    setIsSending(true);
+    setIsSendingEmail(true);
+    setCompressionInfo(null);
+    setCurrentStep("");
 
     try {
+      // ETAPA 1: Validação
+      setCurrentStep("Validando formulário...");
+      if (!emailData.to || !emailData.subject || !emailData.message) {
+        throw new Error("Preencha todos os campos obrigatórios do email");
+      }
+      validateFormData();
+
+      // ETAPA 2: Geração do PDF
+      setCurrentStep("Gerando PDF do formulário...");
+      let formPdfBytes: Uint8Array;
+      try {
+        formPdfBytes = await generateFormPdf(formData);
+        setPdfBytes(formPdfBytes); // Salva no store
+      } catch (error) {
+        throw new Error(
+          `Erro na geração do PDF: ${
+            error instanceof Error ? error.message : "Erro desconhecido"
+          }`
+        );
+      }
+
+      // ETAPA 3: Merge de PDFs (se aplicável)
+      let finalPdfBytes = formPdfBytes;
+      let isMerged = false;
+
+      if (uploadedFile) {
+        setCurrentStep("Mesclando PDFs...");
+        try {
+          const uploadedPdfBytes = await uploadedFile.arrayBuffer();
+          const mergeResult = await PdfMergeUtils.mergePdfs(
+            formPdfBytes,
+            new Uint8Array(uploadedPdfBytes)
+          );
+          finalPdfBytes = mergeResult.mergedBytes;
+          isMerged = true;
+        } catch (error) {
+          throw new Error(
+            `Erro no merge de PDFs: ${
+              error instanceof Error ? error.message : "Erro desconhecido"
+            }`
+          );
+        }
+      }
+
+      // ETAPA 4: Compressão
+      setCurrentStep("Verificando compressão...");
+      let pdfToSend = finalPdfBytes;
+      const emailHtml = EmailTemplates.formEmail(
+        emailData.subject,
+        formData,
+        emailData.message
+      );
+
+      const needsCompression = PdfCompressUtils.needsCompression(
+        finalPdfBytes,
+        emailHtml
+      );
+
+      if (needsCompression) {
+        setCurrentStep("Comprimindo PDF...");
+        try {
+          const compressResult = await PdfCompressUtils.compressPdf(
+            finalPdfBytes,
+            (info) => {
+              setCompressionInfo(info);
+            }
+          );
+          pdfToSend = compressResult.compressedBytes;
+
+          if (compressResult.info && !compressResult.info.success) {
+            throw new Error(
+              `O PDF é muito grande (${(
+                compressResult.info.compressedSize /
+                1024 /
+                1024
+              ).toFixed(2)} MB) mesmo após compressão. ` +
+                `O limite total do Resend é 15MB. Por favor, reduza o tamanho do PDF anexado.`
+            );
+          }
+        } catch (error) {
+          throw new Error(
+            `Erro na compressão: ${
+              error instanceof Error ? error.message : "Erro desconhecido"
+            }`
+          );
+        }
+      }
+
+      // ETAPA 5: Envio do Email
+      setCurrentStep("Enviando email...");
+      const pdfBase64 = arrayBufferToBase64(pdfToSend);
+
       const response = await fetch("/api/send-email", {
         method: "POST",
         headers: {
@@ -46,15 +195,17 @@ export default function EmailSender({
         body: JSON.stringify({
           to: emailData.to,
           subject: emailData.subject,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #1f2937;">${emailData.subject}</h2>
-              <div style="white-space: pre-wrap;">${emailData.message}</div>
-              <div style="margin-top: 20px; padding: 15px; background: #f3f4f6; border-radius: 5px;">
-                <p style="margin: 0; color: #6b7280;">Email enviado via T-App</p>
-              </div>
-            </div>
-          `,
+          html: emailHtml,
+          attachments: [
+            {
+              filename: isMerged
+                ? "formulario-com-anexo.pdf"
+                : "formulario-preenchido.pdf",
+              content: pdfBase64,
+              contentType: "application/pdf",
+              encoding: "base64",
+            },
+          ],
         }),
       });
 
@@ -64,26 +215,41 @@ export default function EmailSender({
         throw new Error(result.error || "Erro ao enviar email");
       }
 
-      onEmailSent?.(result);
       alert("Email enviado com sucesso!");
+      onEmailSent?.(pdfToSend);
 
-      // Limpar formulário
-      setEmailData((prev) => ({ ...prev, subject: "", message: "" }));
+      // Limpar após envio
+      setEmailData((prev) => ({
+        ...prev,
+        subject: "Formulário Preenchido com Anexo",
+        message: "",
+      }));
+      setUploadedFile(null);
     } catch (error) {
-      devLog.error("Erro no envio de email:", error);
-      alert("Erro ao enviar email. Tente novamente.");
+      const errorMessage =
+        error instanceof Error ? error.message : "Erro desconhecido";
+      alert(`Erro: ${errorMessage}`);
     } finally {
-      setIsSending(false);
+      setIsSendingEmail(false);
+      setCurrentStep("");
     }
   };
+
+  // Status do anexo para display
+  const hasFormData =
+    formData.text_nome &&
+    formData.text_rg &&
+    formData.text_cpf &&
+    formData.signature;
 
   return (
     <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
       <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-        Envio de Email
+        Enviar Documento por Email
       </h2>
 
       <form onSubmit={handleSendEmail} className="space-y-4">
+        {/* Campos do email (mantidos iguais) */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Para *
@@ -109,40 +275,53 @@ export default function EmailSender({
             value={emailData.subject}
             onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-            placeholder="Digite o assunto do email"
+            placeholder="Assunto do email"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Mensagem *
-          </label>
+          <div className="flex justify-between items-center mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Mensagem *
+            </label>
+            <button
+              type="button"
+              onClick={generateDefaultMessage}
+              className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md transition-colors"
+            >
+              Gerar Mensagem Padrão
+            </button>
+          </div>
           <textarea
             name="message"
             value={emailData.message}
             onChange={handleChange}
             rows={6}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-            placeholder="Digite sua mensagem"
+            placeholder="Digite sua mensagem..."
             required
           />
         </div>
 
+        {/* Componente de Upload integrado */}
+        <FileUpload
+          onFileSelect={handleFileSelect}
+          accept=".pdf"
+          label="Selecionar PDF para Anexar"
+          required={false}
+        />
+
         <button
           type="submit"
-          disabled={isSending}
-          className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white py-3 px-4 rounded-md font-medium transition-colors"
+          disabled={isSendingEmail || !hasFormData}
+          className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-md font-medium transition-colors"
         >
-          {isSending ? "📧 Enviando..." : "📧 Enviar Email"}
+          {isSendingEmail
+            ? `📧 ${currentStep || "Enviando..."}`
+            : "📧 Enviar Documento por Email"}
         </button>
       </form>
-
-      <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
-        <p className="text-blue-700 dark:text-blue-300 text-sm">
-          <strong>Destinatário padrão:</strong> {defaultRecipient}
-        </p>
-      </div>
     </div>
   );
 }
