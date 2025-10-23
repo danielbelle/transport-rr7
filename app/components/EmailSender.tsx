@@ -1,18 +1,15 @@
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { devLog } from "~/utils/dev-log";
 import { EmailTemplates } from "~/utils/email-templates";
 import { generateFormPdf } from "~/utils/pdf-form-edit";
 import { PdfCompressUtils } from "~/utils/pdf-compress";
-import type {
-  EmailSenderProps,
-  PdfMergeWithFormRef,
-  CompressionInfo,
-} from "~/utils/types";
+import { PdfMergeUtils } from "~/utils/pdf-merge";
+import type { EmailSenderProps, CompressionInfo } from "~/utils/types";
+import { FileUpload } from "~/components/ui/FileUpload";
 
 export default function EmailSender({
   formData,
   onEmailSent,
-  pdfMergeRef,
 }: EmailSenderProps) {
   const [emailData, setEmailData] = useState({
     to: "henrique.danielb@gmail.com",
@@ -20,20 +17,23 @@ export default function EmailSender({
     message: "",
   });
   const [isSending, setIsSending] = useState(false);
-  const [hasUploadedFile, setHasUploadedFile] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [compressionInfo, setCompressionInfo] =
     useState<CompressionInfo | null>(null);
   const [currentStep, setCurrentStep] = useState<string>("");
 
-  // Efeito para registrar callback do PdfMergeWithForm
+  // Helpers de debug
+  const formatBytes = (bytes?: number) =>
+    typeof bytes === "number"
+      ? `${(bytes / 1024 / 1024).toFixed(2)} MB`
+      : "n/a";
+
   useEffect(() => {
-    if (pdfMergeRef?.current && (pdfMergeRef.current as any).setOnFileChange) {
-      (pdfMergeRef.current as any).setOnFileChange((hasFile: boolean) => {
-        devLog.log("📁 Callback recebido do PdfMergeWithForm:", hasFile);
-        setHasUploadedFile(hasFile);
-      });
-    }
-  }, [pdfMergeRef]);
+    devLog.info("📨 [EmailSender] Montado", {
+      formDataKeys: Object.keys(formData || {}),
+    });
+    return () => devLog.info("📨 [EmailSender] Desmontado");
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -88,8 +88,22 @@ Sistema T-App`;
     return true;
   };
 
+  const handleFileSelect = (file: File | null) => {
+    setUploadedFile(file);
+    devLog.log("📨 [EmailSender] Arquivo selecionado:", {
+      hasFile: !!file,
+      name: file?.name,
+      size: file ? formatBytes(file.size) : "n/a",
+    });
+  };
+
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
+    devLog.info("📨 [EmailSender] handleSendEmail iniciado", {
+      emailData,
+      hasUploadedFile: !!uploadedFile,
+    });
+
     setIsSending(true);
     setCompressionInfo(null);
     setCurrentStep("");
@@ -97,29 +111,28 @@ Sistema T-App`;
     try {
       // ETAPA 1: Validação
       setCurrentStep("Validando formulário...");
+      devLog.log("📨 [EmailSender] Etapa 1: Validando dados do email");
+
       if (!emailData.to || !emailData.subject || !emailData.message) {
         throw new Error("Preencha todos os campos obrigatórios do email");
       }
 
-      if (pdfMergeRef?.current && !hasUploadedFile) {
-        throw new Error(
-          "Selecione um PDF para anexar no componente 'Mesclar PDFs'"
-        );
-      }
-
       validateFormData();
+      devLog.log("📨 [EmailSender] Validação do formulário OK");
 
       // ETAPA 2: Geração do PDF
       setCurrentStep("Gerando PDF do formulário...");
+      devLog.log("📨 [EmailSender] Etapa 2: Gerando PDF do formulário");
+
       let formPdfBytes: Uint8Array;
       try {
         formPdfBytes = await generateFormPdf(formData);
-        devLog.log(
-          "✅ PDF do formulário gerado:",
-          formPdfBytes.length,
-          "bytes"
-        );
+        devLog.log("✅ [EmailSender] PDF do formulário gerado", {
+          bytes: formPdfBytes.length,
+          size: formatBytes(formPdfBytes.length),
+        });
       } catch (error) {
+        devLog.error("❌ [EmailSender] Erro na geração do PDF:", error);
         throw new Error(
           `Erro na geração do PDF: ${
             error instanceof Error ? error.message : "Erro desconhecido"
@@ -128,29 +141,51 @@ Sistema T-App`;
       }
 
       // ETAPA 3: Merge de PDFs (se aplicável)
-      setCurrentStep("Mesclando PDFs...");
       let finalPdfBytes = formPdfBytes;
       let isMerged = false;
 
-      if (pdfMergeRef?.current && hasUploadedFile) {
+      if (uploadedFile) {
+        setCurrentStep("Mesclando PDFs...");
+        devLog.log("📨 [EmailSender] Etapa 3: Merge com PDF anexado", {
+          fileName: uploadedFile.name,
+          fileSize: formatBytes(uploadedFile.size),
+        });
+
         try {
-          const mergedBytes = await pdfMergeRef.current.performMerge();
-          if (mergedBytes) {
-            finalPdfBytes = mergedBytes;
-            isMerged = true;
-            devLog.log("✅ Merge de PDFs realizado com sucesso!");
-          }
+          const uploadedPdfBytes = await uploadedFile.arrayBuffer();
+          const mergeResult = await PdfMergeUtils.mergePdfs(
+            formPdfBytes,
+            new Uint8Array(uploadedPdfBytes)
+          );
+
+          finalPdfBytes = mergeResult.mergedBytes;
+          isMerged = true;
+
+          devLog.log("✅ [EmailSender] Merge realizado com sucesso", {
+            mergedSize: formatBytes(finalPdfBytes.length),
+            totalPages: mergeResult.pageCount,
+          });
         } catch (error) {
+          devLog.error("❌ [EmailSender] Erro no merge de PDFs:", error);
           throw new Error(
             `Erro no merge de PDFs: ${
               error instanceof Error ? error.message : "Erro desconhecido"
             }`
           );
         }
+      } else {
+        devLog.log(
+          "📨 [EmailSender] Nenhum PDF anexado - usando apenas formulário"
+        );
       }
 
       // ETAPA 4: Compressão
       setCurrentStep("Verificando compressão...");
+      devLog.log("📨 [EmailSender] Etapa 4: Compressão/verificação", {
+        finalSize: formatBytes(finalPdfBytes.length),
+        isMerged,
+      });
+
       let pdfToSend = finalPdfBytes;
       const emailHtml = EmailTemplates.formEmail(
         emailData.subject,
@@ -162,16 +197,30 @@ Sistema T-App`;
         finalPdfBytes,
         emailHtml
       );
+      devLog.log("📨 [EmailSender] needsCompression:", needsCompression);
 
       if (needsCompression) {
         setCurrentStep("Comprimindo PDF...");
+        devLog.log("📨 [EmailSender] Iniciando compressão");
         try {
           const compressResult = await PdfCompressUtils.compressPdf(
             finalPdfBytes,
-            setCompressionInfo
+            (info) => {
+              devLog.log(
+                "📨 [EmailSender] Progresso/resultado compressão:",
+                info
+              );
+              setCompressionInfo(info);
+            }
           );
 
           pdfToSend = compressResult.compressedBytes;
+
+          devLog.log("✅ [EmailSender] Compressão concluída", {
+            original: formatBytes(finalPdfBytes.length),
+            compressed: formatBytes(pdfToSend.length),
+            info: compressResult.info,
+          });
 
           if (compressResult.info && !compressResult.info.success) {
             throw new Error(
@@ -184,6 +233,7 @@ Sistema T-App`;
             );
           }
         } catch (error) {
+          devLog.error("❌ [EmailSender] Erro na compressão:", error);
           throw new Error(
             `Erro na compressão: ${
               error instanceof Error ? error.message : "Erro desconhecido"
@@ -194,6 +244,13 @@ Sistema T-App`;
 
       // ETAPA 5: Envio do Email
       setCurrentStep("Enviando email...");
+      devLog.log("📨 [EmailSender] Etapa 5: Envio de email", {
+        attachmentName: isMerged
+          ? "formulario-com-anexo.pdf"
+          : "formulario-preenchido.pdf",
+        size: formatBytes(pdfToSend.length),
+      });
+
       const pdfBase64 = arrayBufferToBase64(pdfToSend);
 
       const response = await fetch("/api/send-email", {
@@ -219,36 +276,50 @@ Sistema T-App`;
       });
 
       const result = await response.json();
+      devLog.log("📨 [EmailSender] Resposta envio", {
+        ok: response.ok,
+        status: response.status,
+        result,
+      });
 
       if (!response.ok) {
         throw new Error(result.error || "Erro ao enviar email");
       }
 
-      // SUCESSO
       alert("Email enviado com sucesso!");
       onEmailSent?.(pdfToSend);
 
-      // Limpar formulário
       setEmailData((prev) => ({
         ...prev,
         subject: "Formulário Preenchido com Anexo",
         message: "",
       }));
+
+      // Limpar arquivo após envio bem-sucedido
+      setUploadedFile(null);
     } catch (error) {
-      // TRATAMENTO DE ERROS ESPECÍFICOS
       const errorMessage =
         error instanceof Error ? error.message : "Erro desconhecido";
-      devLog.error(`❌ Erro no envio (etapa: ${currentStep}):`, error);
+      devLog.error(
+        `❌ [EmailSender] Erro no envio (etapa: ${currentStep}):`,
+        error
+      );
 
       alert(`Erro: ${errorMessage}`);
     } finally {
       setIsSending(false);
       setCurrentStep("");
+      devLog.info("📨 [EmailSender] handleSendEmail finalizado");
     }
   };
 
   // Status do anexo para display
-  const hasAttachment = pdfMergeRef?.current ? hasUploadedFile : true; // Sempre tem o PDF do formulário
+  const hasAttachment = !!uploadedFile;
+  const hasFormData =
+    formData.text_nome &&
+    formData.text_rg &&
+    formData.text_cpf &&
+    formData.signature;
 
   return (
     <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
@@ -257,7 +328,7 @@ Sistema T-App`;
       </h2>
 
       <form onSubmit={handleSendEmail} className="space-y-4">
-        {/* Campos do email (mantidos iguais) */}
+        {/* Campos do email */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Para *
@@ -312,58 +383,17 @@ Sistema T-App`;
           />
         </div>
 
-        {/* Informações do Anexo */}
-        <div
-          className={`p-4 rounded-md border ${
-            hasAttachment
-              ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
-              : "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800"
-          }`}
-        >
-          <h4
-            className={`font-medium mb-2 ${
-              hasAttachment
-                ? "text-green-800 dark:text-green-300"
-                : "text-yellow-800 dark:text-yellow-300"
-            }`}
-          >
-            {hasAttachment
-              ? "✅ Anexo Pronto para Envio"
-              : "⚠️ Aguardando Anexo"}
-          </h4>
-          <div
-            className={`text-sm space-y-1 ${
-              hasAttachment
-                ? "text-green-700 dark:text-green-400"
-                : "text-yellow-700 dark:text-yellow-400"
-            }`}
-          >
-            <div>
-              <strong>Formulário:</strong> ✓ Pronto para geração
-            </div>
-            {pdfMergeRef && (
-              <div>
-                <strong>PDF Anexado:</strong>{" "}
-                {hasUploadedFile ? "✓ Selecionado" : "⏳ Aguardando seleção"}
-              </div>
-            )}
-            {pdfMergeRef && (
-              <div>
-                <strong>Merge:</strong>{" "}
-                {hasUploadedFile ? "✓ Será realizado" : "⏳ Não necessário"}
-              </div>
-            )}
-            {currentStep && (
-              <div className="text-blue-600 dark:text-blue-400 mt-2">
-                🔄 {currentStep}
-              </div>
-            )}
-          </div>
-        </div>
+        {/* Componente de Upload integrado */}
+        <FileUpload
+          onFileSelect={handleFileSelect}
+          accept=".pdf"
+          label="Selecionar PDF para Anexar"
+          required={false}
+        />
 
         <button
           type="submit"
-          disabled={isSending || !hasAttachment}
+          disabled={isSending || !hasFormData}
           className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-md font-medium transition-colors"
         >
           {isSending
@@ -371,12 +401,58 @@ Sistema T-App`;
             : "📧 Enviar Documento por Email"}
         </button>
 
-        {!hasAttachment && (
+        {!hasFormData && (
           <div className="text-center text-red-600 dark:text-red-400 text-sm">
-            ⚠️ É necessário ter um anexo para enviar o email
+            ⚠️ Preencha todos os campos do formulário para enviar o email
           </div>
         )}
       </form>
+
+      {/* Informações do Anexo */}
+      <div
+        className={`p-4 rounded-md border mt-4 ${
+          hasAttachment
+            ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+            : "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800"
+        }`}
+      >
+        <h4
+          className={`font-medium mb-2 ${
+            hasAttachment
+              ? "text-green-800 dark:text-green-300"
+              : "text-yellow-800 dark:text-yellow-300"
+          }`}
+        >
+          {hasAttachment ? "✅ Anexo Pronto para Envio" : "📎 Anexo Opcional"}
+        </h4>
+        <div
+          className={`text-sm space-y-1 ${
+            hasAttachment
+              ? "text-green-700 dark:text-green-400"
+              : "text-yellow-700 dark:text-yellow-400"
+          }`}
+        >
+          <div>
+            <strong>Formulário:</strong>{" "}
+            {hasFormData ? "✓ Pronto" : "⏳ Pendente"}
+          </div>
+          <div>
+            <strong>PDF Anexado:</strong>{" "}
+            {hasAttachment
+              ? `✓ ${uploadedFile?.name}`
+              : "⏳ Nenhum selecionado"}
+          </div>
+          <div>
+            <strong>Merge:</strong>{" "}
+            {hasAttachment ? "✓ Será realizado" : "⏳ Não necessário"}
+          </div>
+          {currentStep && (
+            <div className="text-blue-600 dark:text-blue-400 mt-2">
+              🔄 {currentStep}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Dados do Formulário para Referência */}
       <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-md border border-blue-200 dark:border-blue-800">
@@ -399,6 +475,33 @@ Sistema T-App`;
           </div>
         </div>
       </div>
+
+      {/* Informações de Compressão */}
+      {compressionInfo && (
+        <div className="mt-4 bg-purple-50 dark:bg-purple-900/20 p-4 rounded-md border border-purple-200 dark:border-purple-800">
+          <h4 className="font-medium text-purple-800 dark:text-purple-300 mb-2">
+            Informações de Compressão:
+          </h4>
+          <div className="text-sm text-purple-700 dark:text-purple-400 space-y-1">
+            <div>
+              <strong>Original:</strong>{" "}
+              {formatBytes(compressionInfo.originalSize)}
+            </div>
+            <div>
+              <strong>Comprimido:</strong>{" "}
+              {formatBytes(compressionInfo.compressedSize)}
+            </div>
+            <div>
+              <strong>Redução:</strong>{" "}
+              {compressionInfo.compressionRatio.toFixed(1)}%
+            </div>
+            <div>
+              <strong>Status:</strong>{" "}
+              {compressionInfo.success ? "✅ Sucesso" : "⚠️ Atenção"}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

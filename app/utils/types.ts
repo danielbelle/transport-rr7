@@ -147,7 +147,7 @@ export interface EmailSenderProps {
   pdfBytes: Uint8Array | null;
   formData: FormData;
   onEmailSent?: (pdfBytes: Uint8Array) => void;
-  pdfMergeRef?: React.RefObject<PdfMergeWithFormRef | null>;
+  pdfMergeRef?: React.RefObject<FileAttachRef | null>;
   pdfLiveRef?: React.RefObject<PdfLiveRef | null>;
 }
 
@@ -193,4 +193,20 @@ export interface PdfCompressProps {
 
 export interface PdfFormEditUtils {
   generateFormPdf: (formData: FormData) => Promise<Uint8Array>;
+}
+// =============================================================================
+// COMPONENTE: File Attach
+// =============================================================================
+
+export interface FileAttachProps {
+  formPdfBytes: Uint8Array | null;
+  onMergeComplete?: (mergedPdfBytes: Uint8Array) => void;
+  onFileSelectionChange?: (hasFile: boolean) => void;
+}
+
+export interface FileAttachRef {
+  performMerge: () => Promise<Uint8Array | null>;
+  getMergedPdfBytes: () => Uint8Array | null;
+  hasUploadedFile: () => boolean;
+  setOnFileChange?: (callback: (hasFile: boolean) => void) => void;
 }
