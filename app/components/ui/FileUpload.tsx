@@ -1,12 +1,5 @@
 import { useState, useRef } from "react";
-import { devLog } from "~/utils/dev-log";
-
-export interface FileUploadProps {
-  onFileSelect: (file: File | null) => void;
-  accept?: string;
-  label?: string;
-  required?: boolean;
-}
+import type { FileUploadProps } from "~/utils/types";
 
 export function FileUpload({
   onFileSelect,
@@ -26,11 +19,6 @@ export function FileUpload({
       if (file.type === "application/pdf") {
         setSelectedFile(file);
         onFileSelect(file);
-        devLog.log("📁 Arquivo selecionado:", {
-          name: file.name,
-          size: file.size,
-          type: file.type,
-        });
       } else {
         alert("Por favor, selecione um arquivo PDF!");
         if (fileInputRef.current) {
@@ -49,7 +37,6 @@ export function FileUpload({
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-    devLog.log("📁 Arquivo removido");
   };
 
   return (

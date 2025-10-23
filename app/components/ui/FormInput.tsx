@@ -1,11 +1,5 @@
 import React from "react";
-import type { FieldConfig } from "~/utils/types";
-
-interface FormInputProps {
-  field: FieldConfig;
-  value: string;
-  onChange: (fieldKey: string, value: string) => void;
-}
+import type { FormInputProps } from "~/utils/types";
 
 export const FormInput: React.FC<FormInputProps> = ({
   field,

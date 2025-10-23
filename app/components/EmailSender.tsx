@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { devLog } from "~/utils/dev-log";
 import { EmailTemplates } from "~/utils/email-templates";
 import { generateFormPdf } from "~/utils/pdf-form-edit";
 import { PdfCompressUtils } from "~/utils/pdf-compress";
@@ -27,13 +26,6 @@ export default function EmailSender({
     typeof bytes === "number"
       ? `${(bytes / 1024 / 1024).toFixed(2)} MB`
       : "n/a";
-
-  useEffect(() => {
-    devLog.info("📨 [EmailSender] Montado", {
-      formDataKeys: Object.keys(formData || {}),
-    });
-    return () => devLog.info("📨 [EmailSender] Desmontado");
-  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -90,19 +82,10 @@ Sistema T-App`;
 
   const handleFileSelect = (file: File | null) => {
     setUploadedFile(file);
-    devLog.log("📨 [EmailSender] Arquivo selecionado:", {
-      hasFile: !!file,
-      name: file?.name,
-      size: file ? formatBytes(file.size) : "n/a",
-    });
   };
 
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    devLog.info("📨 [EmailSender] handleSendEmail iniciado", {
-      emailData,
-      hasUploadedFile: !!uploadedFile,
-    });
 
     setIsSending(true);
     setCompressionInfo(null);
@@ -111,28 +94,20 @@ Sistema T-App`;
     try {
       // ETAPA 1: Validação
       setCurrentStep("Validando formulário...");
-      devLog.log("📨 [EmailSender] Etapa 1: Validando dados do email");
 
       if (!emailData.to || !emailData.subject || !emailData.message) {
         throw new Error("Preencha todos os campos obrigatórios do email");
       }
 
       validateFormData();
-      devLog.log("📨 [EmailSender] Validação do formulário OK");
 
       // ETAPA 2: Geração do PDF
       setCurrentStep("Gerando PDF do formulário...");
-      devLog.log("📨 [EmailSender] Etapa 2: Gerando PDF do formulário");
 
       let formPdfBytes: Uint8Array;
       try {
         formPdfBytes = await generateFormPdf(formData);
-        devLog.log("✅ [EmailSender] PDF do formulário gerado", {
-          bytes: formPdfBytes.length,
-          size: formatBytes(formPdfBytes.length),
-        });
       } catch (error) {
-        devLog.error("❌ [EmailSender] Erro na geração do PDF:", error);
         throw new Error(
           `Erro na geração do PDF: ${
             error instanceof Error ? error.message : "Erro desconhecido"
@@ -146,10 +121,6 @@ Sistema T-App`;
 
       if (uploadedFile) {
         setCurrentStep("Mesclando PDFs...");
-        devLog.log("📨 [EmailSender] Etapa 3: Merge com PDF anexado", {
-          fileName: uploadedFile.name,
-          fileSize: formatBytes(uploadedFile.size),
-        });
 
         try {
           const uploadedPdfBytes = await uploadedFile.arrayBuffer();
@@ -160,31 +131,17 @@ Sistema T-App`;
 
           finalPdfBytes = mergeResult.mergedBytes;
           isMerged = true;
-
-          devLog.log("✅ [EmailSender] Merge realizado com sucesso", {
-            mergedSize: formatBytes(finalPdfBytes.length),
-            totalPages: mergeResult.pageCount,
-          });
         } catch (error) {
-          devLog.error("❌ [EmailSender] Erro no merge de PDFs:", error);
           throw new Error(
             `Erro no merge de PDFs: ${
               error instanceof Error ? error.message : "Erro desconhecido"
             }`
           );
         }
-      } else {
-        devLog.log(
-          "📨 [EmailSender] Nenhum PDF anexado - usando apenas formulário"
-        );
       }
 
       // ETAPA 4: Compressão
       setCurrentStep("Verificando compressão...");
-      devLog.log("📨 [EmailSender] Etapa 4: Compressão/verificação", {
-        finalSize: formatBytes(finalPdfBytes.length),
-        isMerged,
-      });
 
       let pdfToSend = finalPdfBytes;
       const emailHtml = EmailTemplates.formEmail(
@@ -197,30 +154,18 @@ Sistema T-App`;
         finalPdfBytes,
         emailHtml
       );
-      devLog.log("📨 [EmailSender] needsCompression:", needsCompression);
 
       if (needsCompression) {
         setCurrentStep("Comprimindo PDF...");
-        devLog.log("📨 [EmailSender] Iniciando compressão");
         try {
           const compressResult = await PdfCompressUtils.compressPdf(
             finalPdfBytes,
             (info) => {
-              devLog.log(
-                "📨 [EmailSender] Progresso/resultado compressão:",
-                info
-              );
               setCompressionInfo(info);
             }
           );
 
           pdfToSend = compressResult.compressedBytes;
-
-          devLog.log("✅ [EmailSender] Compressão concluída", {
-            original: formatBytes(finalPdfBytes.length),
-            compressed: formatBytes(pdfToSend.length),
-            info: compressResult.info,
-          });
 
           if (compressResult.info && !compressResult.info.success) {
             throw new Error(
@@ -233,7 +178,6 @@ Sistema T-App`;
             );
           }
         } catch (error) {
-          devLog.error("❌ [EmailSender] Erro na compressão:", error);
           throw new Error(
             `Erro na compressão: ${
               error instanceof Error ? error.message : "Erro desconhecido"
@@ -244,12 +188,6 @@ Sistema T-App`;
 
       // ETAPA 5: Envio do Email
       setCurrentStep("Enviando email...");
-      devLog.log("📨 [EmailSender] Etapa 5: Envio de email", {
-        attachmentName: isMerged
-          ? "formulario-com-anexo.pdf"
-          : "formulario-preenchido.pdf",
-        size: formatBytes(pdfToSend.length),
-      });
 
       const pdfBase64 = arrayBufferToBase64(pdfToSend);
 
@@ -276,11 +214,6 @@ Sistema T-App`;
       });
 
       const result = await response.json();
-      devLog.log("📨 [EmailSender] Resposta envio", {
-        ok: response.ok,
-        status: response.status,
-        result,
-      });
 
       if (!response.ok) {
         throw new Error(result.error || "Erro ao enviar email");
@@ -300,16 +233,11 @@ Sistema T-App`;
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erro desconhecido";
-      devLog.error(
-        `❌ [EmailSender] Erro no envio (etapa: ${currentStep}):`,
-        error
-      );
 
       alert(`Erro: ${errorMessage}`);
     } finally {
       setIsSending(false);
       setCurrentStep("");
-      devLog.info("📨 [EmailSender] handleSendEmail finalizado");
     }
   };
 

@@ -7,7 +7,6 @@ import {
   useCallback,
 } from "react";
 import { PDFDocument } from "pdf-lib";
-import { devLog } from "~/utils/dev-log";
 import type { PdfMergeWithFormProps, PdfMergeWithFormRef } from "~/utils/types";
 
 const PdfMergeWithForm = forwardRef<PdfMergeWithFormRef, PdfMergeWithFormProps>(
@@ -25,7 +24,6 @@ const PdfMergeWithForm = forwardRef<PdfMergeWithFormRef, PdfMergeWithFormProps>(
     // Função para notificar mudanças
     const notifyFileChange = useCallback(
       (hasFile: boolean) => {
-        devLog.log("📁 Notificando mudança de arquivo:", hasFile);
         onFileSelectionChange?.(hasFile);
         onFileChangeRef.current?.(hasFile);
       },
@@ -63,7 +61,6 @@ const PdfMergeWithForm = forwardRef<PdfMergeWithFormRef, PdfMergeWithFormProps>(
         if (file.type === "application/pdf") {
           setUploadedPdf(file);
           setMergedPdfBytes(null);
-          devLog.log("📁 PDF selecionado para anexar:", file.name);
         } else {
           alert("Por favor, selecione um arquivo PDF!");
           if (fileInputRef.current) {
@@ -79,7 +76,6 @@ const PdfMergeWithForm = forwardRef<PdfMergeWithFormRef, PdfMergeWithFormProps>(
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-      devLog.log("📁 PDF anexado removido");
     };
 
     const handleMergePdfs = async (): Promise<Uint8Array | null> => {
@@ -101,7 +97,6 @@ const PdfMergeWithForm = forwardRef<PdfMergeWithFormRef, PdfMergeWithFormProps>(
 
         // Usar o PDF editado (formPdfBytes) que já contém os dados preenchidos
         // O formPdfBytes aqui já é o PDF gerado pelo PdfLive com os dados do formulário
-        devLog.log("📄 Usando PDF editado com dados do formulário para merge");
 
         const formPdfDoc = await PDFDocument.load(formPdfBytes);
         const formPages = await mergedPdf.copyPages(
@@ -125,12 +120,8 @@ const PdfMergeWithForm = forwardRef<PdfMergeWithFormRef, PdfMergeWithFormProps>(
         // Chamar callback com o PDF mesclado
         onMergeComplete?.(mergedPdfBytesResult);
 
-        devLog.log(
-          "✅ PDFs mesclados com sucesso! (PDF editado + PDF anexado)"
-        );
         return mergedPdfBytesResult;
       } catch (error) {
-        devLog.error("❌ Erro ao juntar PDFs:", error);
         alert("Erro ao juntar PDFs. Tente novamente.");
         return null;
       } finally {

@@ -1,11 +1,5 @@
 import { PDFDocument } from "pdf-lib";
-import { devLog } from "~/utils/dev-log";
-
-export interface PdfMergeResult {
-  mergedBytes: Uint8Array;
-  pageCount: number;
-  totalSize: number;
-}
+import type { PdfMergeResult } from "~/utils/types";
 
 export class PdfMergeUtils {
   static async mergePdfs(
@@ -13,8 +7,6 @@ export class PdfMergeUtils {
     uploadedPdfBytes: Uint8Array
   ): Promise<PdfMergeResult> {
     try {
-      devLog.log("🔄 Iniciando merge de PDFs...");
-
       const mergedPdf = await PDFDocument.create();
 
       // Adicionar PDF do formulário
@@ -41,10 +33,8 @@ export class PdfMergeUtils {
         totalSize: mergedBytes.length,
       };
 
-      devLog.log("✅ Merge concluído", result);
       return result;
     } catch (error) {
-      devLog.error("❌ Erro no merge de PDFs:", error);
       throw new Error(
         `Falha no merge: ${
           error instanceof Error ? error.message : "Erro desconhecido"

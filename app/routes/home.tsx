@@ -3,10 +3,7 @@ import type { Route } from "./+types/home";
 import EmailSender from "~/components/EmailSender";
 import Form from "~/components/Form";
 import LiveImage from "~/components/LiveImage";
-import LivePdf from "~/components/LivePdf";
-import PdfMergeWithForm from "~/components/PdfMergeWithForm";
 import type { FormData, PdfLiveRef, PdfMergeWithFormRef } from "~/utils/types";
-import { devLog } from "~/utils/dev-log";
 
 export default function Home() {
   const [formData, setFormData] = useState<FormData>({
@@ -26,9 +23,7 @@ export default function Home() {
     return pdfLiveRef.current?.getCurrentPdfBytes() || null;
   };
 
-  const handleEmailSent = (pdfBytes: Uint8Array) => {
-    devLog.log("Email enviado com sucesso!");
-  };
+  const handleEmailSent = (pdfBytes: Uint8Array) => {};
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">

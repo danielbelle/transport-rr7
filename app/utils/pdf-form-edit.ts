@@ -1,5 +1,4 @@
 import { PDFDocument, rgb } from "pdf-lib";
-import { devLog } from "~/utils/dev-log";
 import { fieldConfig } from "~/utils/field-config";
 import type { FormData, FlexibleFormData, FieldConfig } from "~/utils/types";
 
@@ -10,8 +9,6 @@ import type { FormData, FlexibleFormData, FieldConfig } from "~/utils/types";
  */
 export async function generateFormPdf(formData: FormData): Promise<Uint8Array> {
   try {
-    devLog.log("🔄 Iniciando geração do PDF em background...");
-
     // Carregar template PDF
     const templateBytes = await loadPdfTemplate();
     const pdfDoc = await PDFDocument.load(templateBytes);
@@ -38,12 +35,6 @@ export async function generateFormPdf(formData: FormData): Promise<Uint8Array> {
           size: fontSize,
           color: rgb(0, 0, 0),
         });
-
-        devLog.log(`✅ Campo ${field.key} adicionado:`, {
-          value,
-          x,
-          y: pageHeight - y,
-        });
       }
     });
 
@@ -54,12 +45,6 @@ export async function generateFormPdf(formData: FormData): Promise<Uint8Array> {
         const signatureData = flexibleFormData[field.key];
         if (signatureData && signatureData.startsWith("data:image/")) {
           await addSignatureToPdf(pdfDoc, signatureData, field);
-          devLog.log("✅ Assinatura adicionada ao PDF");
-        } else {
-          devLog.log(
-            "ℹ️ Assinatura não encontrada ou formato inválido:",
-            field.key
-          );
         }
       });
 
@@ -68,17 +53,8 @@ export async function generateFormPdf(formData: FormData): Promise<Uint8Array> {
 
     const pdfBytes = await pdfDoc.save();
 
-    devLog.log("✅ PDF gerado com sucesso:", {
-      tamanho: `${(pdfBytes.length / 1024).toFixed(2)} KB`,
-      camposPreenchidos: Object.values(formData).filter(
-        (val) => val && val.trim()
-      ).length,
-      assinaturaIncluida: !!formData.signature,
-    });
-
     return pdfBytes;
   } catch (error) {
-    devLog.error("❌ Erro na geração do PDF:", error);
     throw new Error(
       `Falha na geração do PDF: ${
         error instanceof Error ? error.message : "Erro desconhecido"
@@ -103,7 +79,6 @@ async function loadPdfTemplate(): Promise<ArrayBuffer> {
 
     return await response.arrayBuffer();
   } catch (error) {
-    devLog.error("❌ Erro ao carregar template PDF:", error);
     throw new Error(
       `Não foi possível carregar o template PDF: ${
         error instanceof Error ? error.message : "Erro desconhecido"
@@ -153,14 +128,6 @@ async function addSignatureToPdf(
     const width = field.width || 100;
     const height = field.height || 50;
 
-    devLog.log("📝 Posicionando assinatura:", {
-      x,
-      y: pageHeight - y - height,
-      width,
-      height,
-      pageHeight,
-    });
-
     // Desenhar a imagem da assinatura no PDF
     page.drawImage(image, {
       x: x,
@@ -169,7 +136,6 @@ async function addSignatureToPdf(
       height: height,
     });
   } catch (error) {
-    devLog.error("❌ Erro ao adicionar assinatura:", error);
     throw new Error(
       `Falha ao processar assinatura: ${
         error instanceof Error ? error.message : "Erro desconhecido"

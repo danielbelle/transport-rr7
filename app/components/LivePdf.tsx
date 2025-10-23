@@ -7,10 +7,8 @@ import {
   forwardRef,
 } from "react";
 import { PDFDocument, rgb } from "pdf-lib";
-import { devLog } from "~/utils/dev-log";
 import type {
   LivePdfProps,
-  FormData,
   PdfLiveRef,
   FlexibleFormData,
   FieldConfig,
@@ -45,10 +43,8 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
         const existingPdfBytes = await response.arrayBuffer();
         templateBytesRef.current = existingPdfBytes;
 
-        devLog.log("PDF template carregado com sucesso!");
         return existingPdfBytes;
       } catch (error) {
-        devLog.error("Erro ao carregar PDF template:", error);
         throw error;
       } finally {
         setIsLoadingPdf(false);
@@ -86,10 +82,6 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
         ) {
           image = await pdfDoc.embedJpg(imageBytes);
         } else {
-          devLog.warn(
-            "Formato de imagem não suportado para assinatura:",
-            imageData.substring(0, 50)
-          );
           return;
         }
 
@@ -110,9 +102,7 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
           width: width,
           height: height,
         });
-      } catch (error) {
-        devLog.error("❌ Erro ao adicionar assinatura ao PDF:", error);
-      }
+      } catch (error) {}
     };
 
     // Função para gerar o PDF com os dados atuais (usa configurações de PDF)
@@ -184,7 +174,6 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
         onPdfGenerated?.(url);
         return url;
       } catch (error) {
-        devLog.error("Erro ao gerar preview do PDF:", error);
         return null;
       }
     }, [formData, loadPdfTemplate, onPdfGenerated]);
@@ -192,8 +181,6 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
     // Função generatePdf separada e independente (usa configurações de PDF)
     const generatePdf = useCallback(async (): Promise<Uint8Array | null> => {
       try {
-        devLog.log("🔄 Forçando geração do PDF...");
-
         // Gerar PDF diretamente sem chamar generatePdfPreview
         const templateBytes = await loadPdfTemplate();
         const pdfDoc = await PDFDocument.load(templateBytes);
@@ -240,7 +227,6 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
 
         return pdfBytes;
       } catch (error) {
-        devLog.error("Erro ao forçar geração do PDF:", error);
         return null;
       }
     }, [formData, loadPdfTemplate]);
@@ -299,7 +285,6 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
           document.body.removeChild(link);
         }
       } catch (error) {
-        devLog.error("Erro ao baixar PDF:", error);
         alert("Erro ao gerar PDF. Tente novamente.");
       }
     };

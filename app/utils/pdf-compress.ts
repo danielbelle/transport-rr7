@@ -1,5 +1,4 @@
 import { PDFDocument } from "pdf-lib";
-import { devLog } from "~/utils/dev-log";
 import type { PdfCompressResult, CompressionInfo } from "~/utils/types";
 
 // Calcular tamanho estimado do email (HTML + outros conteúdos)
@@ -29,14 +28,6 @@ export const needsCompression = (
   const totalSize = pdfSize + emailSize;
   const limitBytes = 15 * 1024 * 1024; // 15MB em bytes
 
-  devLog.log("📊 Análise de tamanho do email:", {
-    pdfSize: `${(pdfSize / 1024 / 1024).toFixed(2)} MB`,
-    emailSize: `${(emailSize / 1024 / 1024).toFixed(2)} MB`,
-    totalSize: `${(totalSize / 1024 / 1024).toFixed(2)} MB`,
-    limite: "15 MB",
-    precisaComprimir: totalSize > limitBytes,
-  });
-
   return totalSize > limitBytes;
 };
 
@@ -57,7 +48,6 @@ export const compressPdfBasic = async (
 
     return compressedBytes;
   } catch (error) {
-    devLog.error("❌ Erro na compressão básica:", error);
     throw error;
   }
 };
@@ -73,21 +63,12 @@ export const compressPdf = async (
   const maxAttempts = 2;
 
   try {
-    devLog.log("🔄 Iniciando compressão do PDF...", {
-      tamanhoOriginal: `${(originalSize / 1024 / 1024).toFixed(2)} MB`,
-    });
-
     // Compressão básica
     attempts++;
     compressedBytes = await compressPdfBasic(pdfBytes);
 
     const basicCompressionRatio =
       ((originalSize - compressedBytes.length) / originalSize) * 100;
-
-    devLog.log("📦 Resultado compressão básica:", {
-      tamanho: `${(compressedBytes.length / 1024 / 1024).toFixed(2)} MB`,
-      redução: `${basicCompressionRatio.toFixed(1)}%`,
-    });
 
     const finalSize = compressedBytes.length;
     const compressionRatio = ((originalSize - finalSize) / originalSize) * 100;
@@ -110,15 +91,12 @@ export const compressPdf = async (
     };
 
     onProgress?.(compressionInfo);
-    devLog.log("✅ Processo de compressão finalizado:", compressionInfo);
 
     return {
       compressedBytes,
       info: compressionInfo,
     };
   } catch (error) {
-    devLog.error("❌ Erro no processo de compressão:", error);
-
     const errorInfo: CompressionInfo = {
       originalSize,
       compressedSize: originalSize,

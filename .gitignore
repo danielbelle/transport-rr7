@@ -1,5 +1,4 @@
 .DS_Store
-.env
 /node_modules/
 
 # React Router
@@ -11,3 +10,8 @@ tree.txt
 export.mjs
 export.md
 pnpm-lock.yaml
+
+# Environment variables
+.env
+.env.*
+!.env.example

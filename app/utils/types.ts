@@ -194,6 +194,13 @@ export interface PdfCompressProps {
 export interface PdfFormEditUtils {
   generateFormPdf: (formData: FormData) => Promise<Uint8Array>;
 }
+
+export interface PdfMergeResult {
+  mergedBytes: Uint8Array;
+  pageCount: number;
+  totalSize: number;
+}
+
 // =============================================================================
 // COMPONENTE: File Attach
 // =============================================================================
@@ -209,4 +216,17 @@ export interface FileAttachRef {
   getMergedPdfBytes: () => Uint8Array | null;
   hasUploadedFile: () => boolean;
   setOnFileChange?: (callback: (hasFile: boolean) => void) => void;
+}
+
+export interface FileUploadProps {
+  onFileSelect: (file: File | null) => void;
+  accept?: string;
+  label?: string;
+  required?: boolean;
+}
+
+export interface FormInputProps {
+  field: FieldConfig;
+  value: string;
+  onChange: (fieldKey: string, value: string) => void;
 }
