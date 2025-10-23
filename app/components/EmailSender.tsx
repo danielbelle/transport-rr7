@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { EmailTemplates } from "~/utils/email-templates";
 import { generateFormPdf } from "~/utils/pdf-form-edit";
 import { PdfCompressUtils } from "~/utils/pdf-compress";
 import { PdfMergeUtils } from "~/utils/pdf-merge";
 import type { EmailSenderProps, CompressionInfo } from "~/utils/types";
 import { FileUpload } from "~/components/ui/FileUpload";
+import { useDocumentStore } from "~/stores/document-store";
 
 export default function EmailSender({
   formData,
@@ -15,11 +16,19 @@ export default function EmailSender({
     subject: "Formulário Preenchido com Anexo",
     message: "",
   });
-  const [isSending, setIsSending] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+
   const [compressionInfo, setCompressionInfo] =
     useState<CompressionInfo | null>(null);
   const [currentStep, setCurrentStep] = useState<string>("");
+
+  // Usando o store
+  const {
+    uploadedFile,
+    setUploadedFile,
+    isSendingEmail,
+    setIsSendingEmail,
+    setPdfBytes,
+  } = useDocumentStore();
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -81,26 +90,24 @@ Sistema T-App`;
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    setIsSending(true);
+    setIsSendingEmail(true);
     setCompressionInfo(null);
     setCurrentStep("");
 
     try {
       // ETAPA 1: Validação
       setCurrentStep("Validando formulário...");
-
       if (!emailData.to || !emailData.subject || !emailData.message) {
         throw new Error("Preencha todos os campos obrigatórios do email");
       }
-
       validateFormData();
 
       // ETAPA 2: Geração do PDF
       setCurrentStep("Gerando PDF do formulário...");
-
       let formPdfBytes: Uint8Array;
       try {
         formPdfBytes = await generateFormPdf(formData);
+        setPdfBytes(formPdfBytes); // Salva no store
       } catch (error) {
         throw new Error(
           `Erro na geração do PDF: ${
@@ -115,14 +122,12 @@ Sistema T-App`;
 
       if (uploadedFile) {
         setCurrentStep("Mesclando PDFs...");
-
         try {
           const uploadedPdfBytes = await uploadedFile.arrayBuffer();
           const mergeResult = await PdfMergeUtils.mergePdfs(
             formPdfBytes,
             new Uint8Array(uploadedPdfBytes)
           );
-
           finalPdfBytes = mergeResult.mergedBytes;
           isMerged = true;
         } catch (error) {
@@ -136,7 +141,6 @@ Sistema T-App`;
 
       // ETAPA 4: Compressão
       setCurrentStep("Verificando compressão...");
-
       let pdfToSend = finalPdfBytes;
       const emailHtml = EmailTemplates.formEmail(
         emailData.subject,
@@ -158,7 +162,6 @@ Sistema T-App`;
               setCompressionInfo(info);
             }
           );
-
           pdfToSend = compressResult.compressedBytes;
 
           if (compressResult.info && !compressResult.info.success) {
@@ -182,7 +185,6 @@ Sistema T-App`;
 
       // ETAPA 5: Envio do Email
       setCurrentStep("Enviando email...");
-
       const pdfBase64 = arrayBufferToBase64(pdfToSend);
 
       const response = await fetch("/api/send-email", {
@@ -216,27 +218,24 @@ Sistema T-App`;
       alert("Email enviado com sucesso!");
       onEmailSent?.(pdfToSend);
 
+      // Limpar após envio
       setEmailData((prev) => ({
         ...prev,
         subject: "Formulário Preenchido com Anexo",
         message: "",
       }));
-
-      // Limpar arquivo após envio bem-sucedido
       setUploadedFile(null);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erro desconhecido";
-
       alert(`Erro: ${errorMessage}`);
     } finally {
-      setIsSending(false);
+      setIsSendingEmail(false);
       setCurrentStep("");
     }
   };
 
   // Status do anexo para display
-  const hasAttachment = !!uploadedFile;
   const hasFormData =
     formData.text_nome &&
     formData.text_rg &&
@@ -250,7 +249,7 @@ Sistema T-App`;
       </h2>
 
       <form onSubmit={handleSendEmail} className="space-y-4">
-        {/* Campos do email */}
+        {/* Campos do email (mantidos iguais) */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Para *
@@ -315,10 +314,10 @@ Sistema T-App`;
 
         <button
           type="submit"
-          disabled={isSending || !hasFormData}
+          disabled={isSendingEmail || !hasFormData}
           className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-md font-medium transition-colors"
         >
-          {isSending
+          {isSendingEmail
             ? `📧 ${currentStep || "Enviando..."}`
             : "📧 Enviar Documento por Email"}
         </button>

@@ -1,9 +1,10 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import type { Route } from "./+types/home";
 import EmailSender from "~/components/EmailSender";
 import Form from "~/components/Form";
 import LiveImage from "~/components/LiveImage";
-import type { FormData, PdfLiveRef, PdfMergeWithFormRef } from "~/utils/types";
+import type { FormData } from "~/utils/types";
+import { useDocumentStore } from "~/stores/document-store";
 
 export default function Home() {
   const [formData, setFormData] = useState<FormData>({
@@ -13,16 +14,13 @@ export default function Home() {
     signature: "",
   });
 
-  const [isFormComplete, setIsFormComplete] = useState(false);
-  const [showEmailSender, setShowEmailSender] = useState(false);
+  const { currentStep, setCurrentStep } = useDocumentStore();
 
-  const pdfLiveRef = useRef<PdfLiveRef>(null);
-  const pdfMergeRef = useRef<PdfMergeWithFormRef | null>(null);
+  const [isFormComplete, setIsFormComplete] = useState(false);
 
   const handleFormDataChange = (data: FormData) => {
     setFormData(data);
 
-    // Verificar se todos os campos obrigatórios estão preenchidos
     const isComplete =
       data.text_nome?.trim() !== "" &&
       data.text_rg?.trim() !== "" &&
@@ -32,21 +30,12 @@ export default function Home() {
     setIsFormComplete(isComplete);
   };
 
-  const getCurrentPdfBytes = (): Uint8Array | null => {
-    return pdfLiveRef.current?.getCurrentPdfBytes() || null;
-  };
-
-  const handleEmailSent = (pdfBytes: Uint8Array) => {
-    // Opcional: resetar o estado após envio do email
-    // setShowEmailSender(false);
-  };
-
   const handleShowEmailSender = () => {
-    setShowEmailSender(true);
+    setCurrentStep("email");
   };
 
   const handleBackToForm = () => {
-    setShowEmailSender(false);
+    setCurrentStep("form");
   };
 
   return (
@@ -61,16 +50,13 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Formulário ou EmailSender */}
+        {/* Formulário ou EmailSender baseado no step */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {showEmailSender ? (
+          {currentStep === "email" ? (
             <div className="space-y-4">
               <EmailSender
-                pdfBytes={getCurrentPdfBytes()}
                 formData={formData}
-                onEmailSent={handleEmailSent}
-                pdfMergeRef={pdfMergeRef}
-                pdfLiveRef={pdfLiveRef}
+                onEmailSent={() => setCurrentStep("form")}
               />
               <button
                 onClick={handleBackToForm}
@@ -97,7 +83,7 @@ export default function Home() {
         </div>
 
         {/* Status do Formulário */}
-        {!showEmailSender && (
+        {currentStep === "form" && (
           <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
             <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">
               Status do Formulário:
