@@ -98,62 +98,6 @@ export default function LiveImage({ formData }: LiveImageProps) {
     setTextOverlays(overlays);
   }
 
-  const downloadImage = () => {
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-
-    img.onload = () => {
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
-
-      if (ctx) {
-        // Desenhar imagem de fundo
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        // Desenhar textos e assinaturas
-        const drawOperations: Promise<void>[] = [];
-
-        textOverlays.forEach((overlay) => {
-          if (overlay.type === "signature" && overlay.imageData) {
-            const drawPromise = new Promise<void>((resolve) => {
-              const signatureImg = new Image();
-              signatureImg.onload = () => {
-                // USAR AS DIMENSÕES DA CONFIGURAÇÃO DO CAMPO
-                const width = overlay.width || 300;
-                const height = overlay.height || 100;
-                ctx.drawImage(
-                  signatureImg,
-                  overlay.x,
-                  overlay.y,
-                  width,
-                  height
-                );
-                resolve();
-              };
-              signatureImg.src = overlay.imageData || "";
-            });
-            drawOperations.push(drawPromise);
-          } else if (overlay.text && overlay.text.trim() !== "") {
-            ctx.font = `${overlay.fontSize}px Arial`;
-            ctx.fillStyle = overlay.color;
-            ctx.fillText(overlay.text, overlay.x, overlay.y);
-          }
-        });
-
-        // Esperar todas as assinaturas carregarem antes de fazer download
-        Promise.all(drawOperations).then(() => {
-          const link = document.createElement("a");
-          link.download = "documento-assinado.png";
-          link.href = canvas.toDataURL();
-          link.click();
-        });
-      }
-    };
-
-    img.src = imageUrl;
-  };
-
   return (
     <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
       <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
@@ -168,41 +112,6 @@ export default function LiveImage({ formData }: LiveImageProps) {
           canvasHeight={canvasHeight}
           textOverlays={textOverlays}
         />
-
-        {/* Botão de Download */}
-        <button
-          onClick={downloadImage}
-          disabled={textOverlays.length === 0}
-          className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white py-3 px-4 rounded-md font-medium transition-colors"
-        >
-          📥 Download da Imagem
-        </button>
-
-        {/* Status */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md border border-blue-200 dark:border-blue-800">
-          <div className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
-            <div>
-              <strong>Campos preenchidos:</strong> {textOverlays.length}
-            </div>
-            <div>
-              <strong>Assinaturas:</strong>{" "}
-              {textOverlays.filter((o) => o.type === "signature").length}
-            </div>
-            <div>
-              <strong>Configuração:</strong> Usando posições da imagem (x, y,
-              font)
-            </div>
-            {/* ADICIONAR: Informações sobre dimensões da assinatura */}
-            {textOverlays
-              .filter((o) => o.type === "signature")
-              .map((overlay, index) => (
-                <div key={index}>
-                  <strong>Assinatura {index + 1}:</strong> {overlay.width} x{" "}
-                  {overlay.height} px
-                </div>
-              ))}
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -222,7 +222,7 @@ const PdfMergeWithForm = forwardRef<PdfMergeWithFormRef, PdfMergeWithFormProps>(
               }`}
             >
               <div>
-                <strong>Status:</strong>{" "}
+                <strong>Status:</strong>
                 {formPdfBytes && uploadedPdf
                   ? "Pronto para envio por email"
                   : "Preencha o formulário e selecione um PDF para anexar"}

@@ -83,32 +83,6 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
           className="w-full h-auto max-w-full border border-gray-200 dark:border-gray-600"
         />
       </div>
-
-      <div className="text-sm text-gray-500 dark:text-gray-400">
-        <p>
-          Imagem base: <strong>{imageUrl}</strong>
-        </p>
-        <p>
-          Textos:
-          <strong>
-            {textOverlays.filter((o) => o.type === "text").length}
-          </strong>
-        </p>
-        <p>
-          Assinaturas:
-          <strong>
-            {textOverlays.filter((o) => o.type === "signature").length}
-          </strong>
-        </p>
-        {/* ADICIONAR: Informações sobre dimensões */}
-        {textOverlays
-          .filter((o) => o.type === "signature")
-          .map((overlay, index) => (
-            <p key={index}>
-              Assinatura {index + 1}: {overlay.width} x {overlay.height} px
-            </p>
-          ))}
-      </div>
     </div>
   );
 };

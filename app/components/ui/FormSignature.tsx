@@ -39,7 +39,7 @@ export const FormSignature: React.FC<FormSignatureProps> = ({
   return (
     <div className="space-y-3">
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        {field.label}{" "}
+        {field.label}
         {field.required && <span className="text-red-500">*</span>}
       </label>
 
@@ -77,16 +77,6 @@ export const FormSignature: React.FC<FormSignatureProps> = ({
           >
             Limpar
           </button>
-        </div>
-      </div>
-
-      <div className="text-xs text-gray-500 dark:text-gray-400">
-        <div>
-          <strong>Área de assinatura:</strong> {signatureWidth} ×{" "}
-          {signatureHeight}px
-        </div>
-        <div>
-          <strong>Posição no documento:</strong> ({field.x}, {field.y})
         </div>
       </div>
     </div>

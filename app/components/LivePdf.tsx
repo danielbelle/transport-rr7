@@ -339,11 +339,11 @@ const LivePdf = forwardRef<PdfLiveRef, LivePdfProps>(
                 <strong>Campos:</strong> Nome, RG, CPF, Assinatura
               </div>
               <div>
-                <strong>Assinatura:</strong>{" "}
+                <strong>Assinatura:</strong>
                 {formData.signature ? "✓ Incluída" : "⏳ Aguardando"}
               </div>
               <div>
-                <strong>Status:</strong>{" "}
+                <strong>Status:</strong>
                 {currentPdfBytesRef.current ? "✓ Pronto" : "⏳ Gerando..."}
               </div>
               <div>

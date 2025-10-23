@@ -21,12 +21,6 @@ export default function EmailSender({
     useState<CompressionInfo | null>(null);
   const [currentStep, setCurrentStep] = useState<string>("");
 
-  // Helpers de debug
-  const formatBytes = (bytes?: number) =>
-    typeof bytes === "number"
-      ? `${(bytes / 1024 / 1024).toFixed(2)} MB`
-      : "n/a";
-
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -328,108 +322,7 @@ Sistema T-App`;
             ? `📧 ${currentStep || "Enviando..."}`
             : "📧 Enviar Documento por Email"}
         </button>
-
-        {!hasFormData && (
-          <div className="text-center text-red-600 dark:text-red-400 text-sm">
-            ⚠️ Preencha todos os campos do formulário para enviar o email
-          </div>
-        )}
       </form>
-
-      {/* Informações do Anexo */}
-      <div
-        className={`p-4 rounded-md border mt-4 ${
-          hasAttachment
-            ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
-            : "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800"
-        }`}
-      >
-        <h4
-          className={`font-medium mb-2 ${
-            hasAttachment
-              ? "text-green-800 dark:text-green-300"
-              : "text-yellow-800 dark:text-yellow-300"
-          }`}
-        >
-          {hasAttachment ? "✅ Anexo Pronto para Envio" : "📎 Anexo Opcional"}
-        </h4>
-        <div
-          className={`text-sm space-y-1 ${
-            hasAttachment
-              ? "text-green-700 dark:text-green-400"
-              : "text-yellow-700 dark:text-yellow-400"
-          }`}
-        >
-          <div>
-            <strong>Formulário:</strong>{" "}
-            {hasFormData ? "✓ Pronto" : "⏳ Pendente"}
-          </div>
-          <div>
-            <strong>PDF Anexado:</strong>{" "}
-            {hasAttachment
-              ? `✓ ${uploadedFile?.name}`
-              : "⏳ Nenhum selecionado"}
-          </div>
-          <div>
-            <strong>Merge:</strong>{" "}
-            {hasAttachment ? "✓ Será realizado" : "⏳ Não necessário"}
-          </div>
-          {currentStep && (
-            <div className="text-blue-600 dark:text-blue-400 mt-2">
-              🔄 {currentStep}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Dados do Formulário para Referência */}
-      <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-md border border-blue-200 dark:border-blue-800">
-        <h4 className="font-medium text-blue-800 dark:text-blue-300 mb-2">
-          Dados do Formulário:
-        </h4>
-        <div className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
-          <div>
-            <strong>Nome:</strong> {formData.text_nome || "Não preenchido"}
-          </div>
-          <div>
-            <strong>RG:</strong> {formData.text_rg || "Não preenchido"}
-          </div>
-          <div>
-            <strong>CPF:</strong> {formData.text_cpf || "Não preenchido"}
-          </div>
-          <div>
-            <strong>Assinatura:</strong>{" "}
-            {formData.signature ? "✓ Pronta" : "⏳ Pendente"}
-          </div>
-        </div>
-      </div>
-
-      {/* Informações de Compressão */}
-      {compressionInfo && (
-        <div className="mt-4 bg-purple-50 dark:bg-purple-900/20 p-4 rounded-md border border-purple-200 dark:border-purple-800">
-          <h4 className="font-medium text-purple-800 dark:text-purple-300 mb-2">
-            Informações de Compressão:
-          </h4>
-          <div className="text-sm text-purple-700 dark:text-purple-400 space-y-1">
-            <div>
-              <strong>Original:</strong>{" "}
-              {formatBytes(compressionInfo.originalSize)}
-            </div>
-            <div>
-              <strong>Comprimido:</strong>{" "}
-              {formatBytes(compressionInfo.compressedSize)}
-            </div>
-            <div>
-              <strong>Redução:</strong>{" "}
-              {compressionInfo.compressionRatio.toFixed(1)}%
-            </div>
-            <div>
-              <strong>Status:</strong>{" "}
-              {compressionInfo.success ? "✅ Sucesso" : "⚠️ Atenção"}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

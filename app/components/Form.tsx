@@ -110,7 +110,7 @@ export default function Form({ onFormDataChange, initialData }: FormProps) {
             <strong>CPF:</strong> {formData.text_cpf || "[Não preenchido]"}
           </div>
           <div>
-            <strong>Assinatura:</strong>{" "}
+            <strong>Assinatura:</strong>
             {formData.signature ? "✓ Preenchida" : "[Não assinado]"}
           </div>
         </div>
