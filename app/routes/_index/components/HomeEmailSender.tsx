@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { EmailTemplates } from "~/lib/utils/email-templates";
 import { FileUpload } from "~/components/ui/FileUpload";
 import { useDocumentStore } from "~/lib/stores/document-store";
 import type { EmailSenderProps, CompressionInfo } from "~/lib/types";
+import {
+  HomeEmailTemplates,
+  generateHomeDefaultMessage,
+} from "../utils/email-utils";
 
 export default function HomeEmailSender({
   formData,
@@ -37,17 +40,7 @@ export default function HomeEmailSender({
   };
 
   const generateDefaultMessage = () => {
-    const message = `Prezados,
-
-Segue em anexo o formulário preenchido com os seguintes dados:
-
-• Nome: ${formData.text_nome || "Não informado"}
-• RG: ${formData.text_rg || "Não informado"} 
-• CPF: ${formData.text_cpf || "Não informado"}
-
-Atenciosamente,
-Sistema T-App`;
-
+    const message = generateHomeDefaultMessage(formData);
     setEmailData((prev) => ({
       ...prev,
       message,
@@ -98,12 +91,12 @@ Sistema T-App`;
       }
       validateFormData();
 
-      // ETAPA 2: Geração do PDF (lazy loading)
+      // ETAPA 2: Geração do PDF (usando util específico da home)
       setCurrentStep("Gerando PDF do formulário...");
       let formPdfBytes: Uint8Array;
       try {
-        const { generateFormPdf } = await import("~/lib/utils/pdf-form-edit");
-        formPdfBytes = await generateFormPdf(formData);
+        const { generateHomeFormPdf } = await import("../utils/pdf-utils");
+        formPdfBytes = await generateHomeFormPdf(formData);
         setPdfBytes(formPdfBytes);
       } catch (error) {
         throw new Error(
@@ -113,7 +106,7 @@ Sistema T-App`;
         );
       }
 
-      // ETAPA 3: Merge de PDFs (lazy loading)
+      // ETAPA 3: Merge de PDFs (usando util compartilhado)
       let finalPdfBytes = formPdfBytes;
       let isMerged = false;
 
@@ -137,10 +130,12 @@ Sistema T-App`;
         }
       }
 
-      // ETAPA 4: Compressão (lazy loading)
+      // ETAPA 4: Compressão (usando util compartilhado)
       setCurrentStep("Verificando compressão...");
       let pdfToSend = finalPdfBytes;
-      const emailHtml = EmailTemplates.formEmail(
+
+      // Usar template específico da home
+      const emailHtml = HomeEmailTemplates.formEmail(
         emailData.subject,
         formData,
         emailData.message

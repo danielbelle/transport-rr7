@@ -1,27 +1,25 @@
 import { PDFDocument, rgb } from "pdf-lib";
-import { homeFieldConfig } from "~/routes/_index/utils/home-field-config";
+import { homeFieldConfig } from "./home-field-config";
 import type { FormData, FlexibleFormData, FieldConfig } from "~/lib/types";
 
 /**
- * Gera PDF editado com os dados do formulário (versão utilitária do LivePdf)
- * @param formData Dados do formulário preenchidos
- * @returns Promise<Uint8Array> PDF gerado em bytes
+ * Gera PDF editado com os dados do formulário - ESPECÍFICO para home
  */
-export async function generateFormPdf(formData: FormData): Promise<Uint8Array> {
+export async function generateHomeFormPdf(
+  formData: FormData
+): Promise<Uint8Array> {
   try {
-    // Carregar template PDF
     const templateBytes = await loadPdfTemplate();
     const pdfDoc = await PDFDocument.load(templateBytes);
     const pages = pdfDoc.getPages();
     const page = pages[0];
     const pageHeight = page.getHeight();
 
-    // Converter FormData para FlexibleFormData
     const flexibleFormData = formData as unknown as FlexibleFormData;
 
-    // Processar campos de texto
+    // Processar campos de texto específicos da home
     homeFieldConfig.forEach((field) => {
-      if (field.type === "signature") return; // Assinaturas processadas separadamente
+      if (field.type === "signature") return;
 
       const value = flexibleFormData[field.key];
       if (value && value.trim() !== "") {
@@ -31,14 +29,14 @@ export async function generateFormPdf(formData: FormData): Promise<Uint8Array> {
 
         page.drawText(value, {
           x: x,
-          y: pageHeight - y, // Ajustar coordenada Y
+          y: pageHeight - y,
           size: fontSize,
           color: rgb(0, 0, 0),
         });
       }
     });
 
-    // Processar assinaturas
+    // Processar assinaturas específicas da home
     const signaturePromises = homeFieldConfig
       .filter((field) => field.type === "signature")
       .map(async (field) => {
@@ -48,11 +46,8 @@ export async function generateFormPdf(formData: FormData): Promise<Uint8Array> {
         }
       });
 
-    // Aguardar todas as assinaturas serem processadas
     await Promise.all(signaturePromises);
-
     const pdfBytes = await pdfDoc.save();
-
     return pdfBytes;
   } catch (error) {
     throw new Error(
@@ -64,8 +59,7 @@ export async function generateFormPdf(formData: FormData): Promise<Uint8Array> {
 }
 
 /**
- * Carrega o template PDF uma vez (com cache)
- * @returns Promise<ArrayBuffer> Bytes do template PDF
+ * Carrega template PDF específico da home
  */
 async function loadPdfTemplate(): Promise<ArrayBuffer> {
   try {
@@ -89,11 +83,7 @@ async function loadPdfTemplate(): Promise<ArrayBuffer> {
 }
 
 /**
- * Adiciona assinatura ao PDF
- * @param pdfDoc Documento PDF
- * @param imageData Data URL da imagem da assinatura
- * @param field Configuração do campo de assinatura
- * @returns Promise<void>
+ * Adiciona assinatura ao PDF - específico para home
  */
 async function addSignatureToPdf(
   pdfDoc: PDFDocument,
@@ -101,7 +91,6 @@ async function addSignatureToPdf(
   field: FieldConfig
 ): Promise<void> {
   try {
-    // Validar formato da assinatura
     if (!imageData || !imageData.startsWith("data:image/")) {
       throw new Error("Formato de assinatura inválido");
     }
@@ -109,7 +98,6 @@ async function addSignatureToPdf(
     const imageBytes = dataUrlToUint8Array(imageData);
     let image;
 
-    // Determinar tipo de imagem baseado no data URL
     if (imageData.startsWith("data:image/png")) {
       image = await pdfDoc.embedPng(imageBytes);
     } else if (
@@ -127,16 +115,14 @@ async function addSignatureToPdf(
     const page = pages[0];
     const pageHeight = page.getHeight();
 
-    // Usar configurações específicas do PDF para assinatura
     const x = field.xPdf || field.x;
     const y = field.yPdf || field.y;
     const width = field.width || 100;
     const height = field.height || 50;
 
-    // Desenhar a imagem da assinatura no PDF
     page.drawImage(image, {
       x: x,
-      y: pageHeight - y - height, // Ajuste importante para coordenada Y
+      y: pageHeight - y - height,
       width: width,
       height: height,
     });
@@ -151,8 +137,6 @@ async function addSignatureToPdf(
 
 /**
  * Converte data URL para Uint8Array
- * @param dataUrl Data URL da imagem
- * @returns Uint8Array com bytes da imagem
  */
 function dataUrlToUint8Array(dataUrl: string): Uint8Array {
   try {
@@ -174,10 +158,3 @@ function dataUrlToUint8Array(dataUrl: string): Uint8Array {
     );
   }
 }
-
-/**
- * Utilitários para edição de formulários em PDF
- */
-export const PdfFormEdit = {
-  generateFormPdf,
-};

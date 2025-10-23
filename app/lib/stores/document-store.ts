@@ -1,44 +1,53 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-type DocumentStep = "form" | "preview" | "email";
+type DocumentStep = "form" | "email";
 
 interface DocumentStore {
-  // Estados globais realmente necessários
+  // Estados realmente usados
   currentStep: DocumentStep;
-  pdfBytes: Uint8Array | null;
   uploadedFile: File | null;
-  isGeneratingPdf: boolean;
   isSendingEmail: boolean;
+  pdfBytes: Uint8Array | null;
 
-  // Ações
+  // Ações simplificadas
   setCurrentStep: (step: DocumentStep) => void;
-  setPdfBytes: (bytes: Uint8Array | null) => void;
   setUploadedFile: (file: File | null) => void;
-  setIsGeneratingPdf: (generating: boolean) => void;
   setIsSendingEmail: (sending: boolean) => void;
-  reset: () => void;
+  setPdfBytes: (bytes: Uint8Array | null) => void;
+
+  // Reset apenas para estados temporários
+  resetTemporaryState: () => void;
 }
 
-export const useDocumentStore = create<DocumentStore>((set) => ({
-  // Estado inicial
-  currentStep: "form",
-  pdfBytes: null,
-  uploadedFile: null,
-  isGeneratingPdf: false,
-  isSendingEmail: false,
-
-  // Ações
-  setCurrentStep: (step) => set({ currentStep: step }),
-  setPdfBytes: (bytes) => set({ pdfBytes: bytes }),
-  setUploadedFile: (file) => set({ uploadedFile: file }),
-  setIsGeneratingPdf: (generating) => set({ isGeneratingPdf: generating }),
-  setIsSendingEmail: (sending) => set({ isSendingEmail: sending }),
-  reset: () =>
-    set({
+export const useDocumentStore = create<DocumentStore>()(
+  persist(
+    (set) => ({
+      // Estado inicial
       currentStep: "form",
-      pdfBytes: null,
       uploadedFile: null,
-      isGeneratingPdf: false,
       isSendingEmail: false,
+      pdfBytes: null,
+
+      // Ações
+      setCurrentStep: (step) => set({ currentStep: step }),
+      setUploadedFile: (file) => set({ uploadedFile: file }),
+      setIsSendingEmail: (sending) => set({ isSendingEmail: sending }),
+      setPdfBytes: (bytes) => set({ pdfBytes: bytes }),
+
+      resetTemporaryState: () =>
+        set({
+          uploadedFile: null,
+          isSendingEmail: false,
+          pdfBytes: null,
+        }),
     }),
-}));
+    {
+      name: "document-storage",
+      partialize: (state) => ({
+        // Persistir apenas currentStep, não estados temporários
+        currentStep: state.currentStep,
+      }),
+    }
+  )
+);

@@ -9,6 +9,7 @@
     "typecheck": "react-router typegen && tsc",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "vercel-build": "npm run build && npm run typecheck",
     "export": "node export.mjs",
     "tree": "git ls-files > tree.txt"
   },
