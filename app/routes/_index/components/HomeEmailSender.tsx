@@ -13,7 +13,7 @@ export default function HomeEmailSender({
   onEmailSent,
 }: EmailSenderProps) {
   const [emailData, setEmailData] = useState({
-    to: "henrique.danielb@gmail.com", // ✅ PRESET
+    to: "henrique.danielb@gmail.com", // ✅ PRESET - email do destinatário
     subject: "Formulário Preenchido com Anexo", // ✅ PRESET
     message: "",
   });
@@ -70,7 +70,7 @@ export default function HomeEmailSender({
       "text_mes",
       "text_dias",
       "text_cidade",
-      "text_email",
+      "text_email", // ✅ Email do aluno (que vai no PDF)
       "signature",
     ];
 
@@ -88,10 +88,10 @@ export default function HomeEmailSender({
       );
     }
 
-    // Validação específica de email
+    // ✅ Validação apenas do email do ALUNO (que vai no PDF)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.text_email)) {
-      throw new Error("Email inválido");
+      throw new Error("Email do aluno inválido");
     }
 
     return true;
@@ -101,24 +101,29 @@ export default function HomeEmailSender({
     setUploadedFile(file);
   };
 
-  // ✅ FUNÇÃO PARA LIMPAR TUDO (formulário + email)
-  const resetEverything = () => {
-    // Reset campos do email para valores presetados
+  // ✅ FUNÇÃO PARA LIMPAR TUDO APÓS ENVIO BEM-SUCEDIDO
+  const resetAfterSuccessfulSend = () => {
+    // Reset apenas campos do email (mantém o preset)
     setEmailData({
-      to: "henrique.danielb@gmail.com",
-      subject: "Formulário Preenchido com Anexo",
+      to: "henrique.danielb@gmail.com", // Mantém o preset
+      subject: "Formulário Preenchido com Anexo", // Mantém o preset
       message: "",
     });
 
-    // Reset arquivo anexado
-    setUploadedFile(null);
+    // ❌ NÃO limpa o uploadedFile aqui - será limpo pelo resetTemporaryState do store
     setCompressionInfo(null);
     setPdfBytes(null);
 
-    // Reset estado temporário
+    // Reset estado temporário (isso limpa o uploadedFile apenas após envio bem-sucedido)
     resetTemporaryState();
 
     // Volta para tela de formulário
+    setGlobalCurrentStep("form");
+  };
+
+  // ✅ FUNÇÃO PARA VOLTAR SEM LIMPAR (quando o usuário clica em "Voltar")
+  const handleBackToForm = () => {
+    // Apenas volta para o formulário sem limpar nada
     setGlobalCurrentStep("form");
   };
 
@@ -132,9 +137,13 @@ export default function HomeEmailSender({
     try {
       // ETAPA 1: Validação
       setCurrentStep("Validando formulário...");
+
+      // Valida campos obrigatórios do email
       if (!emailData.to || !emailData.subject || !emailData.message) {
         throw new Error("Preencha todos os campos obrigatórios do email");
       }
+
+      // ✅ Valida apenas o formulário (email do aluno)
       validateFormData();
 
       // ETAPA 2: Geração do PDF
@@ -232,7 +241,7 @@ export default function HomeEmailSender({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          to: emailData.to,
+          to: emailData.to, // ✅ Email do destinatário (pode ser qualquer um válido)
           subject: emailData.subject,
           html: emailHtml,
           attachments: [
@@ -257,13 +266,13 @@ export default function HomeEmailSender({
       // ✅ SUCESSO: Limpa TUDO e volta para formulário
       alert("Email enviado com sucesso!");
 
-      // Limpa todos os campos (formulário + email)
-      resetEverything();
+      // Limpa todos os campos (formulário + email) APÓS ENVIO BEM-SUCEDIDO
+      resetAfterSuccessfulSend();
 
       // Notifica o componente pai
       onEmailSent?.();
     } catch (error) {
-      // ❌ ERRO: Mantém TUDO como estava
+      // ❌ ERRO: Mantém TUDO como estava (incluindo PDF anexado)
       const errorMessage =
         error instanceof Error ? error.message : "Erro desconhecido";
       alert(`Erro: ${errorMessage}`);
@@ -288,7 +297,7 @@ export default function HomeEmailSender({
       <form onSubmit={handleSendEmail} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Para *
+            Para * (Destinatário)
           </label>
           <input
             type="email"
@@ -299,6 +308,9 @@ export default function HomeEmailSender({
             placeholder="Digite o email do destinatário"
             required
           />
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Email para onde será enviado o formulário
+          </p>
         </div>
 
         <div>
@@ -347,6 +359,24 @@ export default function HomeEmailSender({
           required={false}
         />
 
+        {uploadedFile && (
+          <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <span className="text-green-700 dark:text-green-300">
+                  📄 {uploadedFile.name}
+                </span>
+                <span className="text-sm text-green-600 dark:text-green-400">
+                  ({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)
+                </span>
+              </div>
+              <span className="text-xs bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 px-2 py-1 rounded">
+                Pronto para enviar
+              </span>
+            </div>
+          </div>
+        )}
+
         <button
           type="submit"
           disabled={isSendingEmail || !hasFormData}
@@ -358,14 +388,14 @@ export default function HomeEmailSender({
         </button>
       </form>
 
-      {/* Botão para limpar tudo manualmente */}
+      {/* Botão para voltar sem limpar nada */}
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
         <button
           type="button"
-          onClick={resetEverything}
+          onClick={handleBackToForm}
           className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-md font-medium transition-colors"
         >
-          🗑️ Limpar Tudo e Voltar ao Formulário
+          ← Voltar ao Formulário (Manter Anexo)
         </button>
       </div>
     </div>

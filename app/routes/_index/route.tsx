@@ -6,21 +6,24 @@ import HomeLiveImage from "./components/HomeLiveImage";
 import type { FormData } from "~/lib/types";
 import { useDocumentStore } from "~/lib/stores";
 
+// Estado inicial fixo para evitar hydration mismatch
+const initialFormData: FormData = {
+  text_nome: "",
+  text_rg: "",
+  text_cpf: "",
+  text_universidade: "",
+  text_semestre: "",
+  text_curso: "",
+  text_mes: "",
+  text_dias: "",
+  text_cidade: "",
+  text_email: "",
+  signature: "",
+  text_repete: "",
+};
+
 export default function HomePage() {
-  const [formData, setFormData] = useState<FormData>({
-    text_nome: "",
-    text_rg: "",
-    text_cpf: "",
-    text_universidade: "",
-    text_semestre: "",
-    text_curso: "",
-    text_mes: "",
-    text_dias: "",
-    text_cidade: "",
-    text_email: "",
-    signature: "",
-    text_repete: "",
-  });
+  const [formData, setFormData] = useState<FormData>(initialFormData);
 
   const { currentStep, setCurrentStep } = useDocumentStore();
   const [isFormComplete, setIsFormComplete] = useState(false);
@@ -51,20 +54,7 @@ export default function HomePage() {
   };
 
   const handleEmailSent = () => {
-    setFormData({
-      text_nome: "",
-      text_rg: "",
-      text_cpf: "",
-      text_universidade: "",
-      text_semestre: "",
-      text_curso: "",
-      text_mes: "",
-      text_dias: "",
-      text_cidade: "",
-      text_email: "",
-      signature: "",
-      text_repete: "",
-    });
+    setFormData(initialFormData);
     setIsFormComplete(false);
   };
 
@@ -113,23 +103,6 @@ export default function HomePage() {
 
           <HomeLiveImage formData={formData} />
         </div>
-
-        {currentStep === "form" && (
-          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-            <div className="text-sm text-blue-700 dark:text-blue-400">
-              <div className="font-semibold mb-2">Status do Formulário:</div>
-              <div
-                className={`font-medium ${
-                  isFormComplete ? "text-green-600" : "text-yellow-600"
-                }`}
-              >
-                {isFormComplete
-                  ? "✅ Formulário completo! Clique no botão acima para enviar por email."
-                  : "⏳ Preencha todos os campos para continuar."}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

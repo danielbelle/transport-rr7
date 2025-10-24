@@ -1,17 +1,34 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import type { FormSignatureProps } from "~/lib/types";
 
-export const FormSignature: React.FC<FormSignatureProps> = ({
-  field,
-  onSignatureChange,
-}) => {
+export const FormSignature: React.FC<
+  FormSignatureProps & { initialSignature?: string }
+> = ({ field, onSignatureChange, initialSignature = "" }) => {
   const signatureRef = useRef<SignatureCanvas>(null);
   const [isDrawing, setIsDrawing] = useState(false);
 
   // Dimensões fixas e responsivas para o componente de assinatura
   const signatureWidth = 500; // Largura fixa
   const signatureHeight = 150; // Altura fixa
+
+  // ✅ Carregar assinatura existente quando o componente montar
+  useEffect(() => {
+    if (initialSignature && signatureRef.current) {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = signatureRef.current?.getCanvas();
+        if (canvas) {
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          }
+        }
+      };
+      img.src = initialSignature;
+    }
+  }, [initialSignature]);
 
   const handleSignatureEnd = () => {
     const canvas = signatureRef.current;

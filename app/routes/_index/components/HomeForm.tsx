@@ -219,60 +219,11 @@ export default function HomeForm({ onFormDataChange, initialData }: FormProps) {
               key={field.key}
               field={field}
               onSignatureChange={handleSignatureChange}
+              initialSignature={formData.signature} // ✅ Passa a assinatura existente
             />
           ))}
         </div>
       </form>
-
-      {/* Painel de resumo */}
-      <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-md border border-blue-200 dark:border-blue-800">
-        <h4 className="font-medium text-blue-800 dark:text-blue-300 mb-3">
-          📊 Resumo dos Dados Preenchidos:
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-blue-700 dark:text-blue-400">
-          <div>
-            <strong>Nome:</strong> {formData.text_nome || "[Não preenchido]"}
-          </div>
-          <div>
-            <strong>RG:</strong> {formData.text_rg || "[Não preenchido]"}
-          </div>
-          <div>
-            <strong>CPF:</strong> {formData.text_cpf || "[Não preenchido]"}
-          </div>
-          <div>
-            <strong>Email:</strong> {formData.text_email || "[Não preenchido]"}
-          </div>
-          <div>
-            <strong>Universidade:</strong>{" "}
-            {formData.text_universidade || "[Não preenchido]"}
-          </div>
-          <div>
-            <strong>Curso:</strong> {formData.text_curso || "[Não preenchido]"}
-          </div>
-          <div>
-            <strong>Semestre:</strong>{" "}
-            {formData.text_semestre || "[Não preenchido]"}
-          </div>
-          <div>
-            <strong>Mês:</strong> {formData.text_mes || "[Não preenchido]"}
-          </div>
-          <div>
-            <strong>Dias:</strong> {formData.text_dias || "[Não preenchido]"}
-          </div>
-          <div>
-            <strong>Cidade:</strong>{" "}
-            {formData.text_cidade || "[Não preenchido]"}
-          </div>
-          <div>
-            <strong>Nome Assinatura:</strong>{" "}
-            {formData.text_repete || "[Não preenchido]"}
-          </div>
-          <div>
-            <strong>Assinatura:</strong>{" "}
-            {formData.signature ? "✅ Preenchida" : "[Não assinado]"}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

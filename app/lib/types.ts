@@ -52,8 +52,8 @@ export interface FormInputProps {
 export interface FormSignatureProps {
   field: FieldConfig;
   onSignatureChange: (fieldKey: string, signatureData: string | null) => void;
+  initialSignature?: string;
 }
-
 export interface CanvasPreviewProps {
   imageUrl: string;
   canvasWidth: number;
