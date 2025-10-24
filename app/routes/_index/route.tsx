@@ -11,7 +11,15 @@ export default function HomePage() {
     text_nome: "",
     text_rg: "",
     text_cpf: "",
+    text_universidade: "",
+    text_semestre: "",
+    text_curso: "",
+    text_mes: "",
+    text_dias: "",
+    text_cidade: "",
+    text_email: "",
     signature: "",
+    text_repete: "",
   });
 
   const { currentStep, setCurrentStep } = useDocumentStore();
@@ -19,11 +27,26 @@ export default function HomePage() {
 
   const handleFormDataChange = (data: FormData) => {
     setFormData(data);
-    const isComplete =
-      data.text_nome?.trim() !== "" &&
-      data.text_rg?.trim() !== "" &&
-      data.text_cpf?.trim() !== "" &&
-      data.signature?.trim() !== "";
+
+    const requiredFields = [
+      "text_nome",
+      "text_rg",
+      "text_cpf",
+      "text_universidade",
+      "text_semestre",
+      "text_curso",
+      "text_mes",
+      "text_dias",
+      "text_cidade",
+      "text_email",
+      "signature",
+      "text_repete",
+    ];
+
+    const isComplete = requiredFields.every(
+      (field) => data[field as keyof FormData]?.toString().trim() !== ""
+    );
+
     setIsFormComplete(isComplete);
   };
 
@@ -32,7 +55,15 @@ export default function HomePage() {
       text_nome: "",
       text_rg: "",
       text_cpf: "",
+      text_universidade: "",
+      text_semestre: "",
+      text_curso: "",
+      text_mes: "",
+      text_dias: "",
+      text_cidade: "",
+      text_email: "",
       signature: "",
+      text_repete: "",
     });
     setIsFormComplete(false);
   };

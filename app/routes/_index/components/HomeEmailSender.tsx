@@ -6,6 +6,7 @@ import {
   HomeEmailTemplates,
   generateHomeDefaultMessage,
 } from "../utils/email-utils";
+import { homeFieldConfig } from "~/routes/_index/utils/home-field-config";
 
 export default function HomeEmailSender({
   formData,
@@ -59,18 +60,40 @@ export default function HomeEmailSender({
   };
 
   const validateFormData = (): boolean => {
-    if (!formData.text_nome?.trim()) {
-      throw new Error("Campo 'Nome' não preenchido");
+    const requiredFields = [
+      "text_nome",
+      "text_rg",
+      "text_cpf",
+      "text_universidade",
+      "text_semestre",
+      "text_curso",
+      "text_mes",
+      "text_dias",
+      "text_cidade",
+      "text_email",
+      "signature",
+    ];
+
+    const missingFields = requiredFields.filter(
+      (field) => !formData[field as keyof FormData]?.toString().trim()
+    );
+
+    if (missingFields.length > 0) {
+      const fieldNames = missingFields.map((field) => {
+        const fieldConfig = homeFieldConfig.find((f) => f.key === field);
+        return fieldConfig?.label || field;
+      });
+      throw new Error(
+        `Campos obrigatórios não preenchidos: ${fieldNames.join(", ")}`
+      );
     }
-    if (!formData.text_rg?.trim()) {
-      throw new Error("Campo 'RG' não preenchido");
+
+    // Validação específica de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.text_email)) {
+      throw new Error("Email inválido");
     }
-    if (!formData.text_cpf?.trim()) {
-      throw new Error("Campo 'CPF' não preenchido");
-    }
-    if (!formData.signature) {
-      throw new Error("Assinatura não realizada");
-    }
+
     return true;
   };
 

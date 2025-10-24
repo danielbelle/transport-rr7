@@ -20,7 +20,13 @@ export default function HomeLiveImage({ formData }: LiveImageProps) {
   function createTextOverlay(
     field: (typeof homeFieldConfig)[number],
     value: string
-  ): TextOverlay {
+  ): TextOverlay | null {
+    // Ignorar campos com font = 0 (não aparecem na imagem)
+    if (field.font === 0) return null;
+
+    // Ignorar campos com coordenadas 0,0
+    if (field.x === 0 && field.y === 0) return null;
+
     return {
       id: field.key,
       text: value,
@@ -36,7 +42,10 @@ export default function HomeLiveImage({ formData }: LiveImageProps) {
   function createSignatureOverlay(
     field: (typeof homeFieldConfig)[number],
     imageData: string
-  ): TextOverlay {
+  ): TextOverlay | null {
+    // Ignorar campos com coordenadas 0,0
+    if (field.x === 0 && field.y === 0) return null;
+
     return {
       id: `${field.key}-${Date.now()}`,
       text: "",

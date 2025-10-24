@@ -23,6 +23,12 @@ export async function generateHomeFormPdf(
 
       const value = flexibleFormData[field.key];
       if (value && value.trim() !== "") {
+        // Ignorar campos com fontPdf = 0 (não aparecem no PDF)
+        if (field.fontPdf === 0) return;
+
+        // Ignorar campos com coordenadas 0,0
+        if (field.xPdf === 0 && field.yPdf === 0) return;
+
         const fontSize = field.fontPdf || field.font;
         const x = field.xPdf || field.x;
         const y = field.yPdf || field.y;
@@ -42,6 +48,9 @@ export async function generateHomeFormPdf(
       .map(async (field) => {
         const signatureData = flexibleFormData[field.key];
         if (signatureData && signatureData.startsWith("data:image/")) {
+          // Ignorar assinaturas com coordenadas 0,0
+          if (field.xPdf === 0 && field.yPdf === 0) return;
+
           await addSignatureToPdf(pdfDoc, signatureData, field);
         }
       });

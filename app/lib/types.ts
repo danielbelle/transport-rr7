@@ -4,6 +4,14 @@ export interface FormData {
   text_nome: string;
   text_rg: string;
   text_cpf: string;
+  text_universidade: string;
+  text_semestre: string;
+  text_curso: string;
+  text_mes: string;
+  text_dias: string;
+  text_cidade: string;
+  text_email: string;
+  text_repete: string;
   signature: string;
 }
 
