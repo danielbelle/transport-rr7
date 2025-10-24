@@ -29,7 +29,7 @@ export default function Welcome({
   };
 
   return (
-    <main className="flex items-center justify-center pt-10 pb-4 min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <main className="flex items-center justify-center pt-10 pb-4 min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="flex-1 flex flex-col items-center gap-12 max-w-4xl mx-auto px-4">
         <header className="flex flex-col items-center gap-6">
           <LogoComponent className="w-[300px] max-w-[80vw]" />

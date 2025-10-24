@@ -42,7 +42,7 @@ export default function NotificationContainer() {
           )} animate-in slide-in-from-right-full duration-300`}
         >
           <div className="flex items-start gap-3">
-            <span className="text-lg flex-shrink-0">
+            <span className="text-lg shrink-0">
               {getNotificationIcon(notification.type)}
             </span>
             <div className="flex-1">
@@ -50,7 +50,7 @@ export default function NotificationContainer() {
             </div>
             <button
               onClick={() => removeNotification(notification.id)}
-              className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             >
               ✕
             </button>

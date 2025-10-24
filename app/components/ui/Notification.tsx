@@ -45,15 +45,13 @@ export default function Notification({
         )} animate-in slide-in-from-right-full duration-300`}
       >
         <div className="flex items-start gap-3">
-          <span className="text-lg flex-shrink-0">
-            {getNotificationIcon(type)}
-          </span>
+          <span className="text-lg shrink-0">{getNotificationIcon(type)}</span>
           <div className="flex-1">
             <p className="text-sm font-medium">{message}</p>
           </div>
           <button
             onClick={onClose}
-            className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
           >
             ✕
           </button>
