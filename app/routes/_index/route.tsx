@@ -27,9 +27,7 @@ export default function HomePage() {
     setIsFormComplete(isComplete);
   };
 
-  // ✅ Função para resetar o formulário quando email for enviado
   const handleEmailSent = () => {
-    // Limpa os dados do formulário no estado local
     setFormData({
       text_nome: "",
       text_rg: "",
@@ -56,7 +54,7 @@ export default function HomePage() {
             <div className="space-y-4">
               <HomeEmailSender
                 formData={formData}
-                onEmailSent={handleEmailSent} // ✅ Passa callback para limpar formulário
+                onEmailSent={handleEmailSent}
               />
               <button
                 onClick={() => setCurrentStep("form")}
@@ -69,7 +67,7 @@ export default function HomePage() {
             <div className="space-y-4">
               <HomeForm
                 onFormDataChange={handleFormDataChange}
-                initialData={formData} // ✅ Passa dados atuais para reset
+                initialData={formData}
               />
               {isFormComplete && (
                 <button
@@ -85,7 +83,6 @@ export default function HomePage() {
           <HomeLiveImage formData={formData} />
         </div>
 
-        {/* Status do formulário simplificado */}
         {currentStep === "form" && (
           <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
             <div className="text-sm text-blue-700 dark:text-blue-400">

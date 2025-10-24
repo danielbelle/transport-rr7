@@ -43,7 +43,7 @@ export const FormSignature: React.FC<FormSignatureProps> = ({
         {field.required && <span className="text-red-500">*</span>}
       </label>
 
-      <div className="border-2 border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 overflow-hidden">
+      <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 overflow-hidden">
         {/* Container responsivo que mantém a proporção */}
         <div
           className="relative w-full bg-white dark:bg-gray-700"

@@ -9,6 +9,11 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import Header from "~/components/layout/header";
+import Footer from "~/components/layout/footer";
+import UnifiedLoading from "./components/ui/UnifiedLoading";
+import { NotificationProvider } from "./lib/notification-context";
+import NotificationContainer from "./components/ui/NotificationContainer";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -42,16 +47,42 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <NotificationProvider>
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1">
+          <Outlet />
+        </main>
+        <Footer />
+        <NotificationContainer />
+      </div>
+    </NotificationProvider>
+  );
+}
+
+export function HydrateFallback() {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1 flex items-center justify-center">
+        <UnifiedLoading
+          variant="fullpage"
+          title="Carregando Sistema"
+          message="Inicializando o editor multiplataforma..."
+        />
+      </main>
+      <Footer />
+    </div>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  // Ignora erros de rotas específicas de devtools
   const pathname =
     typeof window !== "undefined" ? window.location.pathname : "";
 
   if (pathname.includes(".well-known/appspecific/com.chrome.devtools")) {
-    return null; // Silenciosamente ignora
+    return null;
   }
 
   let message = "Oops!";
@@ -70,14 +101,18 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
-    </main>
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1 pt-16 p-4 container mx-auto">
+        <h1>{message}</h1>
+        <p>{details}</p>
+        {stack && (
+          <pre className="w-full p-4 overflow-x-auto">
+            <code>{stack}</code>
+          </pre>
+        )}
+      </main>
+      <Footer />
+    </div>
   );
 }
