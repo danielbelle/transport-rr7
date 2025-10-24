@@ -244,9 +244,6 @@ export default function HomeEmailSender({
       const errorMessage =
         error instanceof Error ? error.message : "Erro desconhecido";
       alert(`Erro: ${errorMessage}`);
-
-      // NÃO limpa nenhum campo - mantém tudo preenchido
-      console.log("Email não enviado. Todos os campos mantidos.");
     } finally {
       setIsSendingEmail(false);
       setCurrentStep("");

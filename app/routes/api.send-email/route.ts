@@ -26,7 +26,6 @@ export async function action({ request }: ActionFunctionArgs) {
     });
 
     if (error) {
-      console.error("Erro Resend:", error);
       return new Response(JSON.stringify({ error: error.message }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
@@ -38,7 +37,6 @@ export async function action({ request }: ActionFunctionArgs) {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Erro interno:", error);
     return new Response(JSON.stringify({ error: "Erro interno do servidor" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
