@@ -1,3 +1,5 @@
+// Manter TODOS os tipos que estão sendo usados atualmente
+
 export interface FormData {
   text_nome: string;
   text_rg: string;
@@ -27,7 +29,7 @@ export interface FieldConfig {
   height?: number;
 }
 
-// COMPONENT PROPS (mantenho apenas os essenciais)
+// COMPONENT PROPS
 export interface FormProps {
   onFormDataChange?: (data: FormData) => void;
   initialData?: FormData;
@@ -78,10 +80,10 @@ export interface FileUploadProps {
 
 export interface EmailSenderProps {
   formData: FormData;
-  onEmailSent?: (pdfBytes: Uint8Array) => void;
+  onEmailSent?: () => void;
 }
 
-// PDF UTILS TYPES
+// PDF UTILS TYPES - ESSENCIAIS para os utilitários de PDF
 export interface CompressionInfo {
   originalSize: number;
   compressedSize: number;

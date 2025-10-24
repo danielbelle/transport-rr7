@@ -1,10 +1,10 @@
 import { useState } from "react";
-import type { Route } from ".rr/routes/_index/+types/route";
+import type { Route } from "./+types/route";
 import HomeForm from "./components/HomeForm";
 import HomeEmailSender from "./components/HomeEmailSender";
 import HomeLiveImage from "./components/HomeLiveImage";
 import type { FormData } from "~/lib/types";
-import { useDocumentStore } from "~/lib/stores/document-store";
+import { useDocumentStore } from "~/lib/stores";
 
 export default function HomePage() {
   const [formData, setFormData] = useState<FormData>({
@@ -27,12 +27,16 @@ export default function HomePage() {
     setIsFormComplete(isComplete);
   };
 
-  const handleShowEmailSender = () => {
-    setCurrentStep("email");
-  };
-
-  const handleBackToForm = () => {
-    setCurrentStep("form");
+  // ✅ Função para resetar o formulário quando email for enviado
+  const handleEmailSent = () => {
+    // Limpa os dados do formulário no estado local
+    setFormData({
+      text_nome: "",
+      text_rg: "",
+      text_cpf: "",
+      signature: "",
+    });
+    setIsFormComplete(false);
   };
 
   return (
@@ -52,10 +56,10 @@ export default function HomePage() {
             <div className="space-y-4">
               <HomeEmailSender
                 formData={formData}
-                onEmailSent={() => setCurrentStep("form")}
+                onEmailSent={handleEmailSent} // ✅ Passa callback para limpar formulário
               />
               <button
-                onClick={handleBackToForm}
+                onClick={() => setCurrentStep("form")}
                 className="w-full bg-gray-600 hover:bg-gray-700 text-white py-3 px-4 rounded-md font-medium transition-colors"
               >
                 ← Voltar ao Formulário
@@ -63,10 +67,13 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="space-y-4">
-              <HomeForm onFormDataChange={handleFormDataChange} />
+              <HomeForm
+                onFormDataChange={handleFormDataChange}
+                initialData={formData} // ✅ Passa dados atuais para reset
+              />
               {isFormComplete && (
                 <button
-                  onClick={handleShowEmailSender}
+                  onClick={() => setCurrentStep("email")}
                   className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-md font-medium transition-colors"
                 >
                   📧 Continuar para Envio por Email
@@ -78,28 +85,13 @@ export default function HomePage() {
           <HomeLiveImage formData={formData} />
         </div>
 
+        {/* Status do formulário simplificado */}
         {currentStep === "form" && (
           <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-            <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">
-              Status do Formulário:
-            </h3>
-            <div className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
-              <div>
-                <strong>Nome:</strong>{" "}
-                {formData.text_nome || "❌ Não preenchido"}
-              </div>
-              <div>
-                <strong>RG:</strong> {formData.text_rg || "❌ Não preenchido"}
-              </div>
-              <div>
-                <strong>CPF:</strong> {formData.text_cpf || "❌ Não preenchido"}
-              </div>
-              <div>
-                <strong>Assinatura:</strong>{" "}
-                {formData.signature ? "✅ Preenchida" : "❌ Pendente"}
-              </div>
+            <div className="text-sm text-blue-700 dark:text-blue-400">
+              <div className="font-semibold mb-2">Status do Formulário:</div>
               <div
-                className={`mt-2 font-medium ${
+                className={`font-medium ${
                   isFormComplete ? "text-green-600" : "text-yellow-600"
                 }`}
               >

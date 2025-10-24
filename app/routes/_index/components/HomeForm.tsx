@@ -3,7 +3,6 @@ import { FormInput } from "~/components/ui/FormInput";
 import { FormSignature } from "~/components/ui/FormSignature";
 import { homeFieldConfig } from "../utils/home-field-config";
 import type { FormProps, FormData, FlexibleFormData } from "~/lib/types";
-import { useDocumentStore } from "~/lib/stores/document-store";
 
 export default function HomeForm({ onFormDataChange, initialData }: FormProps) {
   const [formData, setFormData] = useState<FlexibleFormData>({
@@ -12,6 +11,24 @@ export default function HomeForm({ onFormDataChange, initialData }: FormProps) {
     text_cpf: initialData?.text_cpf || "",
     signature: initialData?.signature || "",
   });
+
+  // ✅ Reset do formulário quando initialData mudar para vazio
+  useEffect(() => {
+    if (
+      initialData &&
+      !initialData.text_nome &&
+      !initialData.text_rg &&
+      !initialData.text_cpf &&
+      !initialData.signature
+    ) {
+      setFormData({
+        text_nome: "",
+        text_rg: "",
+        text_cpf: "",
+        signature: "",
+      });
+    }
+  }, [initialData]);
 
   const handleFieldChange = (fieldKey: string, value: string) => {
     const newData = {

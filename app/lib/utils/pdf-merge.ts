@@ -7,9 +7,6 @@ import type { PdfMergeResult } from "~/lib/types";
 export class PdfMergeUtils {
   /**
    * Realiza o merge de dois PDFs (formulário + anexo)
-   * @param formPdfBytes Bytes do PDF do formulário preenchido
-   * @param uploadedPdfBytes Bytes do PDF anexado pelo usuário
-   * @returns Objeto com PDF mesclado e informações do resultado
    */
   static async mergePdfs(
     formPdfBytes: Uint8Array,
@@ -54,8 +51,6 @@ export class PdfMergeUtils {
 
   /**
    * Formata bytes para formato legível (MB)
-   * @param bytes Quantidade de bytes
-   * @returns String formatada em MB
    */
   static formatBytes(bytes: number): string {
     return `${(bytes / 1024 / 1024).toFixed(2)} MB`;

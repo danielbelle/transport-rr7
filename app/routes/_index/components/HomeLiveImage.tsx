@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { CanvasPreview } from "~/components/ui/CanvasPreview";
-import { homeFieldConfig } from "../utils/home-field-config";
-import { useDocumentStore } from "~/lib/stores/document-store";
+import { homeFieldConfig } from "~/routes/_index/utils/home-field-config";
 import type {
   TextOverlay,
   LiveImageProps,

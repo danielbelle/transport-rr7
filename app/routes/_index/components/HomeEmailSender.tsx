@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FileUpload } from "~/components/ui/FileUpload";
-import { useDocumentStore } from "~/lib/stores/document-store";
-import type { EmailSenderProps, CompressionInfo } from "~/lib/types";
+import { useDocumentStore } from "~/lib/stores";
+import type { EmailSenderProps, CompressionInfo, FormData } from "~/lib/types";
 import {
   HomeEmailTemplates,
   generateHomeDefaultMessage,
@@ -12,8 +12,8 @@ export default function HomeEmailSender({
   onEmailSent,
 }: EmailSenderProps) {
   const [emailData, setEmailData] = useState({
-    to: "henrique.danielb@gmail.com",
-    subject: "Formulário Preenchido com Anexo",
+    to: "henrique.danielb@gmail.com", // ✅ PRESET
+    subject: "Formulário Preenchido com Anexo", // ✅ PRESET
     message: "",
   });
 
@@ -27,6 +27,8 @@ export default function HomeEmailSender({
     isSendingEmail,
     setIsSendingEmail,
     setPdfBytes,
+    resetTemporaryState,
+    setCurrentStep: setGlobalCurrentStep,
   } = useDocumentStore();
 
   const handleChange = (
@@ -76,6 +78,27 @@ export default function HomeEmailSender({
     setUploadedFile(file);
   };
 
+  // ✅ FUNÇÃO PARA LIMPAR TUDO (formulário + email)
+  const resetEverything = () => {
+    // Reset campos do email para valores presetados
+    setEmailData({
+      to: "henrique.danielb@gmail.com",
+      subject: "Formulário Preenchido com Anexo",
+      message: "",
+    });
+
+    // Reset arquivo anexado
+    setUploadedFile(null);
+    setCompressionInfo(null);
+    setPdfBytes(null);
+
+    // Reset estado temporário
+    resetTemporaryState();
+
+    // Volta para tela de formulário
+    setGlobalCurrentStep("form");
+  };
+
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -91,7 +114,7 @@ export default function HomeEmailSender({
       }
       validateFormData();
 
-      // ETAPA 2: Geração do PDF (usando util específico da home)
+      // ETAPA 2: Geração do PDF
       setCurrentStep("Gerando PDF do formulário...");
       let formPdfBytes: Uint8Array;
       try {
@@ -106,7 +129,7 @@ export default function HomeEmailSender({
         );
       }
 
-      // ETAPA 3: Merge de PDFs (usando util compartilhado)
+      // ETAPA 3: Merge de PDFs
       let finalPdfBytes = formPdfBytes;
       let isMerged = false;
 
@@ -130,11 +153,10 @@ export default function HomeEmailSender({
         }
       }
 
-      // ETAPA 4: Compressão (usando util compartilhado)
+      // ETAPA 4: Compressão
       setCurrentStep("Verificando compressão...");
       let pdfToSend = finalPdfBytes;
 
-      // Usar template específico da home
       const emailHtml = HomeEmailTemplates.formEmail(
         emailData.subject,
         formData,
@@ -209,20 +231,22 @@ export default function HomeEmailSender({
         throw new Error(result.error || "Erro ao enviar email");
       }
 
+      // ✅ SUCESSO: Limpa TUDO e volta para formulário
       alert("Email enviado com sucesso!");
-      onEmailSent?.(pdfToSend);
 
-      // Limpar após envio
-      setEmailData((prev) => ({
-        ...prev,
-        subject: "Formulário Preenchido com Anexo",
-        message: "",
-      }));
-      setUploadedFile(null);
+      // Limpa todos os campos (formulário + email)
+      resetEverything();
+
+      // Notifica o componente pai
+      onEmailSent?.();
     } catch (error) {
+      // ❌ ERRO: Mantém TUDO como estava
       const errorMessage =
         error instanceof Error ? error.message : "Erro desconhecido";
       alert(`Erro: ${errorMessage}`);
+
+      // NÃO limpa nenhum campo - mantém tudo preenchido
+      console.log("Email não enviado. Todos os campos mantidos.");
     } finally {
       setIsSendingEmail(false);
       setCurrentStep("");
@@ -313,6 +337,17 @@ export default function HomeEmailSender({
             : "📧 Enviar Documento por Email"}
         </button>
       </form>
+
+      {/* Botão para limpar tudo manualmente */}
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+        <button
+          type="button"
+          onClick={resetEverything}
+          className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-md font-medium transition-colors"
+        >
+          🗑️ Limpar Tudo e Voltar ao Formulário
+        </button>
+      </div>
     </div>
   );
 }
