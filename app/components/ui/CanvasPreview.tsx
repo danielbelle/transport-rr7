@@ -10,6 +10,9 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const backgroundImageRef = useRef<HTMLImageElement | null>(null);
   const [isBackgroundLoaded, setIsBackgroundLoaded] = useState(false);
+  const [loadedSignatures, setLoadedSignatures] = useState<Set<string>>(
+    new Set()
+  );
 
   // Carregar imagem de fundo uma vez
   useEffect(() => {
@@ -17,7 +20,6 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
     img.onload = () => {
       backgroundImageRef.current = img;
       setIsBackgroundLoaded(true);
-      drawCanvas();
     };
     img.src = imageUrl;
   }, [imageUrl]);
@@ -27,7 +29,7 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
     if (isBackgroundLoaded) {
       drawCanvas();
     }
-  }, [textOverlays, isBackgroundLoaded]);
+  }, [textOverlays, isBackgroundLoaded, loadedSignatures]);
 
   const drawCanvas = () => {
     const canvas = canvasRef.current;
@@ -51,15 +53,26 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
     // Desenhar textos e assinaturas
     textOverlays.forEach((overlay) => {
       if (overlay.type === "signature" && overlay.imageData) {
-        // Criar imagem para a assinatura
-        const signatureImg = new Image();
-        signatureImg.onload = () => {
-          // USAR AS DIMENSÕES DA CONFIGURAÇÃO DO CAMPO
-          const width = overlay.width || 300;
-          const height = overlay.height || 100;
-          ctx.drawImage(signatureImg, overlay.x, overlay.y, width, height);
-        };
-        signatureImg.src = overlay.imageData;
+        // ✅ CORREÇÃO: Verificar se a assinatura já foi carregada
+        if (loadedSignatures.has(overlay.id)) {
+          const signatureImg = new Image();
+          signatureImg.onload = () => {
+            const width = overlay.width || 300;
+            const height = overlay.height || 100;
+            ctx.drawImage(signatureImg, overlay.x, overlay.y, width, height);
+          };
+          signatureImg.src = overlay.imageData;
+        } else {
+          // ✅ CORREÇÃO: Carregar assinatura e marcar como carregada
+          const signatureImg = new Image();
+          signatureImg.onload = () => {
+            const width = overlay.width || 300;
+            const height = overlay.height || 100;
+            ctx.drawImage(signatureImg, overlay.x, overlay.y, width, height);
+            setLoadedSignatures((prev) => new Set(prev).add(overlay.id));
+          };
+          signatureImg.src = overlay.imageData;
+        }
       } else if (overlay.text && overlay.text.trim() !== "") {
         // Desenhar texto normal
         ctx.font = `${overlay.fontSize}px Arial`;

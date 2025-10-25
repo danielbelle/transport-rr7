@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Route } from "./+types/route";
 import HomeForm from "./components/HomeForm";
 import HomeEmailSender from "./components/HomeEmailSender";
@@ -26,36 +26,49 @@ export default function HomePage() {
   const [formData, setFormData] = useState<FormData>(initialFormData);
 
   const { currentStep, setCurrentStep } = useDocumentStore();
-  const [isFormComplete, setIsFormComplete] = useState(false);
+
+  // ✅ CORREÇÃO: Recuperar assinatura do sessionStorage ao montar
+  useEffect(() => {
+    const tempSignature = sessionStorage.getItem("temp_signature");
+    if (tempSignature) {
+      console.log(
+        "🔄 Recuperando assinatura do sessionStorage no componente pai"
+      );
+      setFormData((prev) => ({
+        ...prev,
+        signature: tempSignature,
+      }));
+      sessionStorage.removeItem("temp_signature"); // Limpar após usar
+    }
+  }, []);
+
+  // ✅ GARANTIR que sempre inicie no formulário
+  useEffect(() => {
+    setCurrentStep("form");
+  }, [setCurrentStep]);
 
   const handleFormDataChange = (data: FormData) => {
     setFormData(data);
-
-    const requiredFields = [
-      "text_nome",
-      "text_rg",
-      "text_cpf",
-      "text_universidade",
-      "text_semestre",
-      "text_curso",
-      "text_mes",
-      "text_dias",
-      "text_cidade",
-      "text_email",
-      "signature",
-      "text_repete",
-    ];
-
-    const isComplete = requiredFields.every(
-      (field) => data[field as keyof FormData]?.toString().trim() !== ""
-    );
-
-    setIsFormComplete(isComplete);
   };
 
   const handleEmailSent = () => {
     setFormData(initialFormData);
-    setIsFormComplete(false);
+    sessionStorage.removeItem("temp_signature"); // Limpar ao enviar email
+  };
+
+  // ✅ CORREÇÃO: Função para atualizar apenas a assinatura
+  const handleSignatureUpdate = (signatureData: string | null) => {
+    setFormData((prev) => ({
+      ...prev,
+      signature: signatureData || "",
+    }));
+
+    // ✅ Também salvar no sessionStorage como backup
+    if (signatureData) {
+      sessionStorage.setItem("temp_signature", signatureData);
+    } else {
+      sessionStorage.removeItem("temp_signature");
+    }
   };
 
   return (
@@ -72,33 +85,16 @@ export default function HomePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {currentStep === "email" ? (
-            <div className="space-y-4">
-              <HomeEmailSender
-                formData={formData}
-                onEmailSent={handleEmailSent}
-              />
-              <button
-                onClick={() => setCurrentStep("form")}
-                className="w-full bg-gray-600 hover:bg-gray-700 text-white py-3 px-4 rounded-md font-medium transition-colors"
-              >
-                ← Voltar ao Formulário
-              </button>
-            </div>
+            <HomeEmailSender
+              formData={formData}
+              onEmailSent={handleEmailSent}
+              onSignatureUpdate={handleSignatureUpdate} // ✅ Nova prop
+            />
           ) : (
-            <div className="space-y-4">
-              <HomeForm
-                onFormDataChange={handleFormDataChange}
-                initialData={formData}
-              />
-              {isFormComplete && (
-                <button
-                  onClick={() => setCurrentStep("email")}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-md font-medium transition-colors"
-                >
-                  📧 Continuar para Envio por Email
-                </button>
-              )}
-            </div>
+            <HomeForm
+              onFormDataChange={handleFormDataChange}
+              initialData={formData}
+            />
           )}
 
           <HomeLiveImage formData={formData} />

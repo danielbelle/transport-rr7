@@ -12,12 +12,13 @@ interface DocumentStore {
   setIsSendingEmail: (sending: boolean) => void;
   setPdfBytes: (bytes: Uint8Array | null) => void;
   resetTemporaryState: () => void;
+  resetToForm: () => void; //
 }
 
 export const useDocumentStore = create<DocumentStore>()(
   persist(
     (set) => ({
-      currentStep: "form",
+      currentStep: "form", //
       uploadedFile: null,
       isSendingEmail: false,
       pdfBytes: null,
@@ -32,6 +33,7 @@ export const useDocumentStore = create<DocumentStore>()(
           isSendingEmail: false,
           pdfBytes: null,
         }),
+      resetToForm: () => set({ currentStep: "form" }), // ✅ Nova função
     }),
     {
       name: "document-storage",

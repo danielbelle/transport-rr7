@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FileUpload } from "~/components/ui/FileUpload";
+import { FormSignature } from "~/components/ui/FormSignature";
 import { useDocumentStore } from "~/lib/stores";
 import type { EmailSenderProps, CompressionInfo, FormData } from "~/lib/types";
 import {
@@ -8,16 +9,15 @@ import {
 } from "../utils/email-utils";
 import { homeFieldConfig } from "~/routes/_index/utils/home-field-config";
 
+interface HomeEmailSenderProps extends EmailSenderProps {
+  onSignatureUpdate?: (signatureData: string | null) => void;
+}
+
 export default function HomeEmailSender({
   formData,
   onEmailSent,
-}: EmailSenderProps) {
-  const [emailData, setEmailData] = useState({
-    to: "henrique.danielb@gmail.com", // ✅ PRESET - email do destinatário
-    subject: "Formulário Preenchido com Anexo", // ✅ PRESET
-    message: "",
-  });
-
+  onSignatureUpdate,
+}: HomeEmailSenderProps) {
   const [compressionInfo, setCompressionInfo] =
     useState<CompressionInfo | null>(null);
   const [currentStep, setCurrentStep] = useState<string>("");
@@ -32,22 +32,17 @@ export default function HomeEmailSender({
     setCurrentStep: setGlobalCurrentStep,
   } = useDocumentStore();
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setEmailData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  // ✅ CORREÇÃO: Recuperar assinatura do sessionStorage ao montar
+  useEffect(() => {
+    const tempSignature = sessionStorage.getItem("temp_signature");
+    if (tempSignature && !formData.signature) {
+      console.log("🔄 Recuperando assinatura do sessionStorage");
+      onSignatureUpdate?.(tempSignature);
+    }
+  }, [formData.signature, onSignatureUpdate]);
 
   const generateDefaultMessage = () => {
-    const message = generateHomeDefaultMessage(formData);
-    setEmailData((prev) => ({
-      ...prev,
-      message,
-    }));
+    return generateHomeDefaultMessage(formData);
   };
 
   const arrayBufferToBase64 = (buffer: Uint8Array): string => {
@@ -70,8 +65,8 @@ export default function HomeEmailSender({
       "text_mes",
       "text_dias",
       "text_cidade",
-      "text_email", // ✅ Email do aluno (que vai no PDF)
-      "signature",
+      "text_email",
+      "signature", // ✅ Agora a assinatura é obrigatória aqui
     ];
 
     const missingFields = requiredFields.filter(
@@ -88,10 +83,14 @@ export default function HomeEmailSender({
       );
     }
 
-    // ✅ Validação apenas do email do ALUNO (que vai no PDF)
+    // ✅ CORREÇÃO: Validação mais flexível do email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.text_email)) {
-      throw new Error("Email do aluno inválido");
+    const studentEmail = formData.text_email;
+
+    if (!studentEmail || !emailRegex.test(studentEmail)) {
+      throw new Error(
+        "Email do aluno inválido. Formato correto: exemplo@dominio.com"
+      );
     }
 
     return true;
@@ -101,29 +100,29 @@ export default function HomeEmailSender({
     setUploadedFile(file);
   };
 
+  const handleSignatureChange = (
+    fieldKey: string,
+    signatureData: string | null
+  ) => {
+    // ✅ CORREÇÃO: Notificar o componente pai sobre a atualização da assinatura
+    onSignatureUpdate?.(signatureData);
+    console.log(
+      "✅ Assinatura atualizada e propagada para o pai:",
+      signatureData ? "PRESENTE" : "REMOVIDA"
+    );
+  };
+
   // ✅ FUNÇÃO PARA LIMPAR TUDO APÓS ENVIO BEM-SUCEDIDO
   const resetAfterSuccessfulSend = () => {
-    // Reset apenas campos do email (mantém o preset)
-    setEmailData({
-      to: "henrique.danielb@gmail.com", // Mantém o preset
-      subject: "Formulário Preenchido com Anexo", // Mantém o preset
-      message: "",
-    });
-
-    // ❌ NÃO limpa o uploadedFile aqui - será limpo pelo resetTemporaryState do store
+    // Reset arquivo anexado
+    setUploadedFile(null);
     setCompressionInfo(null);
     setPdfBytes(null);
 
-    // Reset estado temporário (isso limpa o uploadedFile apenas após envio bem-sucedido)
+    // Reset estado temporário
     resetTemporaryState();
 
     // Volta para tela de formulário
-    setGlobalCurrentStep("form");
-  };
-
-  // ✅ FUNÇÃO PARA VOLTAR SEM LIMPAR (quando o usuário clica em "Voltar")
-  const handleBackToForm = () => {
-    // Apenas volta para o formulário sem limpar nada
     setGlobalCurrentStep("form");
   };
 
@@ -138,12 +137,7 @@ export default function HomeEmailSender({
       // ETAPA 1: Validação
       setCurrentStep("Validando formulário...");
 
-      // Valida campos obrigatórios do email
-      if (!emailData.to || !emailData.subject || !emailData.message) {
-        throw new Error("Preencha todos os campos obrigatórios do email");
-      }
-
-      // ✅ Valida apenas o formulário (email do aluno)
+      // ✅ Valida apenas o formulário (incluindo assinatura)
       validateFormData();
 
       // ETAPA 2: Geração do PDF
@@ -189,10 +183,12 @@ export default function HomeEmailSender({
       setCurrentStep("Verificando compressão...");
       let pdfToSend = finalPdfBytes;
 
+      // ✅ Gerar mensagem padrão automaticamente
+      const message = generateDefaultMessage();
       const emailHtml = HomeEmailTemplates.formEmail(
-        emailData.subject,
+        "Formulário Preenchido com Anexo", // ✅ Assunto fixo
         formData,
-        emailData.message
+        message // ✅ Mensagem padrão
       );
 
       const { PdfCompressUtils } = await import("~/lib/utils/pdf-compress");
@@ -241,8 +237,8 @@ export default function HomeEmailSender({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          to: emailData.to, // ✅ Email do destinatário (pode ser qualquer um válido)
-          subject: emailData.subject,
+          to: "henrique.danielb@gmail.com", // ✅ Email fixo do destinatário
+          subject: "Formulário Preenchido com Anexo", // ✅ Assunto fixo
           html: emailHtml,
           attachments: [
             {
@@ -266,7 +262,7 @@ export default function HomeEmailSender({
       // ✅ SUCESSO: Limpa TUDO e volta para formulário
       alert("Email enviado com sucesso!");
 
-      // Limpa todos os campos (formulário + email) APÓS ENVIO BEM-SUCEDIDO
+      // Limpa todos os campos APÓS ENVIO BEM-SUCEDIDO
       resetAfterSuccessfulSend();
 
       // Notifica o componente pai
@@ -283,10 +279,12 @@ export default function HomeEmailSender({
   };
 
   const hasFormData =
-    formData.text_nome &&
-    formData.text_rg &&
-    formData.text_cpf &&
-    formData.signature;
+    formData.text_nome && formData.text_rg && formData.text_cpf;
+
+  // ✅ Encontrar campo de assinatura
+  const signatureField = homeFieldConfig.find(
+    (field) => field.type === "signature"
+  );
 
   return (
     <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
@@ -294,92 +292,88 @@ export default function HomeEmailSender({
         Enviar Documento por Email
       </h2>
 
-      <form onSubmit={handleSendEmail} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Para * (Destinatário)
-          </label>
-          <input
-            type="email"
-            name="to"
-            value={emailData.to}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-            placeholder="Digite o email do destinatário"
-            required
-          />
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Email para onde será enviado o formulário
-          </p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Assunto *
-          </label>
-          <input
-            type="text"
-            name="subject"
-            value={emailData.subject}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-            placeholder="Assunto do email"
-            required
-          />
-        </div>
-
-        <div>
-          <div className="flex justify-between items-center mb-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Mensagem *
-            </label>
-            <button
-              type="button"
-              onClick={generateDefaultMessage}
-              className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md transition-colors"
-            >
-              Gerar Mensagem Padrão
-            </button>
-          </div>
-          <textarea
-            name="message"
-            value={emailData.message}
-            onChange={handleChange}
-            rows={6}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-            placeholder="Digite sua mensagem..."
-            required
-          />
-        </div>
-
-        <FileUpload
-          onFileSelect={handleFileSelect}
-          accept=".pdf"
-          label="Selecionar PDF para Anexar"
-          required={false}
-        />
-
-        {uploadedFile && (
-          <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <span className="text-green-700 dark:text-green-300">
-                  📄 {uploadedFile.name}
-                </span>
-                <span className="text-sm text-green-600 dark:text-green-400">
-                  ({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)
-                </span>
+      <form onSubmit={handleSendEmail} className="space-y-6">
+        {/* ✅ Seção: Assinatura */}
+        {signatureField && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-2">
+              ✍️ Assinatura {formData.signature ? "✅" : "❌"}
+            </h3>
+            <FormSignature
+              key={signatureField.key}
+              field={signatureField}
+              onSignatureChange={handleSignatureChange}
+              initialSignature={formData.signature}
+            />
+            {/* ✅ DEBUG */}
+            {formData.signature && (
+              <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  ✅ Assinatura carregada: {formData.signature.substring(0, 50)}
+                  ...
+                </p>
               </div>
-              <span className="text-xs bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 px-2 py-1 rounded">
-                Pronto para enviar
-              </span>
-            </div>
+            )}
           </div>
         )}
 
+        {/* ✅ Seção: Anexar PDF */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-2">
+            📎 Anexar PDF
+          </h3>
+          <FileUpload
+            onFileSelect={handleFileSelect}
+            accept=".pdf"
+            label="Selecionar PDF para Anexar"
+            required={false}
+          />
+
+          {uploadedFile && (
+            <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <span className="text-green-700 dark:text-green-300">
+                    📄 {uploadedFile.name}
+                  </span>
+                  <span className="text-sm text-green-600 dark:text-green-400">
+                    ({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </span>
+                </div>
+                <span className="text-xs bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 px-2 py-1 rounded">
+                  Pronto para enviar
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ✅ Informações do envio */}
+        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
+          <h4 className="font-medium text-blue-800 dark:text-blue-300 mb-2">
+            ℹ️ Informações do Envio
+          </h4>
+          <div className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
+            <p>
+              <strong>Destinatário:</strong> henrique.danielb@gmail.com
+            </p>
+            <p>
+              <strong>Assunto:</strong> Formulário Preenchido com Anexo
+            </p>
+            <p>
+              <strong>Mensagem:</strong> Será gerada automaticamente com os
+              dados do formulário
+            </p>
+            <p>
+              <strong>Email do aluno no PDF:</strong>{" "}
+              {formData.text_email || "Não preenchido"}
+            </p>
+          </div>
+        </div>
+
         <button
           type="submit"
-          disabled={isSendingEmail || !hasFormData}
+          disabled={isSendingEmail || !hasFormData || !formData.signature}
           className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-md font-medium transition-colors"
         >
           {isSendingEmail
@@ -388,11 +382,11 @@ export default function HomeEmailSender({
         </button>
       </form>
 
-      {/* Botão para voltar sem limpar nada */}
+      {/* ✅ Botão para voltar sem limpar nada - APENAS AQUI */}
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
         <button
           type="button"
-          onClick={handleBackToForm}
+          onClick={() => setGlobalCurrentStep("form")}
           className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-md font-medium transition-colors"
         >
           ← Voltar ao Formulário (Manter Anexo)

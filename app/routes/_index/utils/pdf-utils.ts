@@ -17,28 +17,44 @@ export async function generateHomeFormPdf(
 
     const flexibleFormData = formData as unknown as FlexibleFormData;
 
+    console.log("📊 Dados sendo processados no PDF:", flexibleFormData); // ✅ DEBUG
+
     // Processar campos de texto específicos da home
     homeFieldConfig.forEach((field) => {
       if (field.type === "signature") return;
 
       const value = flexibleFormData[field.key];
-      if (value && value.trim() !== "") {
+
+      // ✅ GARANTIR que text_repete aparece mesmo se estiver vazio
+      if (value && value.toString().trim() !== "") {
         // Ignorar campos com fontPdf = 0 (não aparecem no PDF)
-        if (field.fontPdf === 0) return;
+        if (field.fontPdf === 0) {
+          console.log(`❌ Campo ${field.key} ignorado (fontPdf = 0)`);
+          return;
+        }
 
         // Ignorar campos com coordenadas 0,0
-        if (field.xPdf === 0 && field.yPdf === 0) return;
+        if (field.xPdf === 0 && field.yPdf === 0) {
+          console.log(`❌ Campo ${field.key} ignorado (coordenadas 0,0)`);
+          return;
+        }
 
         const fontSize = field.fontPdf || field.font;
         const x = field.xPdf || field.x;
         const y = field.yPdf || field.y;
 
-        page.drawText(value, {
+        console.log(
+          `✅ Adicionando campo ${field.key}: "${value}" em (${x}, ${y})`
+        );
+
+        page.drawText(value.toString(), {
           x: x,
           y: pageHeight - y,
           size: fontSize,
           color: rgb(0, 0, 0),
         });
+      } else {
+        console.log(`❌ Campo ${field.key} vazio ou não definido`);
       }
     });
 
@@ -51,7 +67,10 @@ export async function generateHomeFormPdf(
           // Ignorar assinaturas com coordenadas 0,0
           if (field.xPdf === 0 && field.yPdf === 0) return;
 
+          console.log(`✅ Processando assinatura para campo ${field.key}`);
           await addSignatureToPdf(pdfDoc, signatureData, field);
+        } else {
+          console.log(`❌ Assinatura não encontrada para ${field.key}`);
         }
       });
 
@@ -59,6 +78,7 @@ export async function generateHomeFormPdf(
     const pdfBytes = await pdfDoc.save();
     return pdfBytes;
   } catch (error) {
+    console.error("❌ Erro na geração do PDF:", error);
     throw new Error(
       `Falha na geração do PDF: ${
         error instanceof Error ? error.message : "Erro desconhecido"
@@ -67,6 +87,7 @@ export async function generateHomeFormPdf(
   }
 }
 
+// Resto do código permanece igual...
 /**
  * Carrega template PDF específico da home
  */
