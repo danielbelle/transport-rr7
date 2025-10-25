@@ -1,21 +1,23 @@
 import { Resend } from "resend";
 import type { ActionFunctionArgs } from "react-router";
 import { env } from "~/lib/env";
-
-// Inicializa o cliente Resend com env validado
-const resend = new Resend(env.RESEND_API_KEY);
+import { validateEmailData } from "~/lib/validation";
 
 export async function action({ request }: ActionFunctionArgs) {
   try {
     const formData = await request.json();
 
-    // Validação adicional do payload
-    if (!formData.to || !formData.subject || !formData.html) {
+    // Validação com Zod (sempre ativa no servidor)
+    const validationResult = validateEmailData(formData);
+    if (!validationResult.success) {
       return new Response(
-        JSON.stringify({ error: "Dados incompletos no payload" }),
+        JSON.stringify({ error: validationResult.errors.join(", ") }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
+
+    // Inicializa o cliente Resend apenas no servidor
+    const resend = new Resend(env.RESEND_API_KEY);
 
     const { data, error } = await resend.emails.send({
       from: "T-App <onboarding@resend.dev>",

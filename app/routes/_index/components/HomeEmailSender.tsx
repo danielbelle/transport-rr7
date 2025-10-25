@@ -8,6 +8,7 @@ import {
   generateHomeDefaultMessage,
 } from "../utils/email-utils";
 import { homeFieldConfig } from "~/routes/_index/utils/home-field-config";
+import { validateFormData, validatePdfFile } from "~/lib/validation";
 
 interface HomeEmailSenderProps extends EmailSenderProps {
   onSignatureUpdate?: (signatureData: string | null) => void;
@@ -52,48 +53,30 @@ export default function HomeEmailSender({
     return btoa(binary);
   };
 
-  const validateFormData = (): boolean => {
-    const requiredFields = [
-      "text_nome",
-      "text_rg",
-      "text_cpf",
-      "text_universidade",
-      "text_semestre",
-      "text_curso",
-      "text_mes",
-      "text_dias",
-      "text_cidade",
-      "text_email",
-      "signature",
-    ];
+  const validateFormDataForEmail = (): boolean => {
+    const result = validateFormData(formData);
 
-    const missingFields = requiredFields.filter(
-      (field) => !formData[field as keyof FormData]?.toString().trim()
-    );
-
-    if (missingFields.length > 0) {
-      const fieldNames = missingFields.map((field) => {
-        const fieldConfig = homeFieldConfig.find((f) => f.key === field);
-        return fieldConfig?.label || field;
-      });
-      throw new Error(
-        `Campos obrigatórios não preenchidos: ${fieldNames.join(", ")}`
-      );
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const studentEmail = formData.text_email;
-
-    if (!studentEmail || !emailRegex.test(studentEmail)) {
-      throw new Error(
-        "Email do aluno inválido. Formato correto: exemplo@dominio.com"
-      );
+    if (!result.success) {
+      throw new Error(result.errors.join(", "));
     }
 
     return true;
   };
 
   const handleFileSelect = (file: File | null) => {
+    if (file) {
+      const result = validatePdfFile({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      });
+
+      if (!result.success) {
+        alert(result.errors.join(", "));
+        return;
+      }
+    }
+
     setUploadedFile(file);
   };
 
@@ -121,7 +104,7 @@ export default function HomeEmailSender({
 
     try {
       setCurrentStep("Validando formulário...");
-      validateFormData();
+      validateFormDataForEmail();
 
       setCurrentStep("Gerando PDF do formulário...");
       let formPdfBytes: Uint8Array;
@@ -288,7 +271,7 @@ export default function HomeEmailSender({
 
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-2">
-            Anexar PDF
+            Anexar PDF {uploadedFile && "✅"}
           </h3>
           <FileUpload
             onFileSelect={handleFileSelect}

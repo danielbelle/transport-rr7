@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import type { FileUploadProps } from "~/lib/types";
+import { validatePdfFile } from "~/lib/validation";
 
 export function FileUpload({
   onFileSelect,
@@ -16,15 +17,23 @@ export function FileUpload({
     if (files && files.length > 0) {
       const file = files[0];
 
-      if (file.type === "application/pdf") {
-        setSelectedFile(file);
-        onFileSelect(file);
-      } else {
-        alert("Por favor, selecione um arquivo PDF!");
+      // Validação com Zod
+      const validationResult = validatePdfFile({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      });
+
+      if (!validationResult.success) {
+        alert(validationResult.errors.join(", "));
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
+        return;
       }
+
+      setSelectedFile(file);
+      onFileSelect(file);
     } else {
       setSelectedFile(null);
       onFileSelect(null);
@@ -57,7 +66,7 @@ export function FileUpload({
         <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
           <div className="flex items-center space-x-3">
             <span className="text-blue-700 dark:text-blue-300">
-              📄 {selectedFile.name}
+              {selectedFile.name}
             </span>
             <span className="text-sm text-blue-600 dark:text-blue-400">
               ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
