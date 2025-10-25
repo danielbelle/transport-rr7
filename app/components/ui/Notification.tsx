@@ -59,7 +59,7 @@ function NotificationItem({
   );
 }
 
-// Container de notificações (substitui )
+// Container de notificações
 export default function Notification() {
   const { notifications, removeNotification } = useNotification();
 

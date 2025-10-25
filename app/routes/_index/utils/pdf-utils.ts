@@ -64,7 +64,6 @@ export async function generateHomeFormPdf(
     const pdfBytes = await pdfDoc.save();
     return pdfBytes;
   } catch (error) {
-    console.error("❌ Erro na geração do PDF:", error);
     throw new Error(
       `Falha na geração do PDF: ${
         error instanceof Error ? error.message : "Erro desconhecido"

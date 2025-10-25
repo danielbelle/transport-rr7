@@ -30,14 +30,15 @@ export default function Input({
   disabled = false,
   className = "",
   error,
-  field, // Prop opcional para compatibilidade com FormInput
+  field,
 }: InputProps) {
-  const inputId = id || name;
+  const inputId = id || name || field?.key; // field?.key como fallback
 
   // Se field for fornecido, usa as configurações do field
   const finalLabel = field?.label || label;
   const finalPlaceholder = field?.placeholder || placeholder;
   const finalRequired = field?.required || required;
+  const finalName = field?.key || name; // name sempre tenha valor
 
   return (
     <div className={`flex flex-col ${className}`}>
@@ -54,7 +55,7 @@ export default function Input({
       <input
         type={type}
         id={inputId}
-        name={name}
+        name={finalName}
         value={value}
         onChange={onChange}
         placeholder={finalPlaceholder}
