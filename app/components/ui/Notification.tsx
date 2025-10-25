@@ -1,16 +1,16 @@
 import React from "react";
+import { useNotification } from "~/lib/notification-context";
 
-interface NotificationProps {
-  type: "success" | "error" | "info" | "warning";
-  message: string;
-  onClose: () => void;
-}
-
-export default function Notification({
+// Componente de notificação individual
+function NotificationItem({
   type,
   message,
   onClose,
-}: NotificationProps) {
+}: {
+  type: "success" | "error" | "info" | "warning";
+  message: string;
+  onClose: () => void;
+}) {
   const getNotificationStyles = (type: string) => {
     switch (type) {
       case "success":
@@ -38,25 +38,46 @@ export default function Notification({
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50 max-w-sm">
-      <div
-        className={`p-4 border rounded-lg shadow-lg ${getNotificationStyles(
-          type
-        )} animate-in slide-in-from-right-full duration-300`}
-      >
-        <div className="flex items-start gap-3">
-          <span className="text-lg shrink-0">{getNotificationIcon(type)}</span>
-          <div className="flex-1">
-            <p className="text-sm font-medium">{message}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            ✕
-          </button>
+    <div
+      className={`p-4 border rounded-lg shadow-lg ${getNotificationStyles(
+        type
+      )} animate-in slide-in-from-right-full duration-300`}
+    >
+      <div className="flex items-start gap-3">
+        <span className="text-lg shrink-0">{getNotificationIcon(type)}</span>
+        <div className="flex-1">
+          <p className="text-sm font-medium">{message}</p>
         </div>
+        <button
+          onClick={onClose}
+          className="shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+        >
+          ✕
+        </button>
       </div>
     </div>
   );
 }
+
+// Container de notificações (substitui )
+export default function Notification() {
+  const { notifications, removeNotification } = useNotification();
+
+  if (notifications.length === 0) return null;
+
+  return (
+    <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm">
+      {notifications.map((notification) => (
+        <NotificationItem
+          key={notification.id}
+          type={notification.type}
+          message={notification.message}
+          onClose={() => removeNotification(notification.id)}
+        />
+      ))}
+    </div>
+  );
+}
+
+// Export individual para uso direto (se necessário)
+export { NotificationItem };

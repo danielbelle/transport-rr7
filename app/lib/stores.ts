@@ -33,7 +33,7 @@ export const useDocumentStore = create<DocumentStore>()(
           isSendingEmail: false,
           pdfBytes: null,
         }),
-      resetToForm: () => set({ currentStep: "form" }), // ✅ Nova função
+      resetToForm: () => set({ currentStep: "form" }),
     }),
     {
       name: "document-storage",

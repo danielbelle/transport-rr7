@@ -1,5 +1,3 @@
-// Manter TODOS os tipos que estão sendo usados atualmente
-
 export interface FormData {
   text_nome: string;
   text_rg: string;
@@ -16,7 +14,7 @@ export interface FormData {
 }
 
 export interface FlexibleFormData extends FormData {
-  [key: string]: string | undefined;
+  [key: string]: string;
 }
 
 export interface FieldConfig {
@@ -37,12 +35,6 @@ export interface FieldConfig {
   height?: number;
 }
 
-// COMPONENT PROPS
-export interface FormProps {
-  onFormDataChange?: (data: FormData) => void;
-  initialData?: FormData;
-}
-
 export interface FormInputProps {
   field: FieldConfig;
   value: string;
@@ -54,6 +46,7 @@ export interface FormSignatureProps {
   onSignatureChange: (fieldKey: string, signatureData: string | null) => void;
   initialSignature?: string;
 }
+
 export interface CanvasPreviewProps {
   imageUrl: string;
   canvasWidth: number;
@@ -91,7 +84,6 @@ export interface EmailSenderProps {
   onEmailSent?: () => void;
 }
 
-// PDF UTILS TYPES - ESSENCIAIS para os utilitários de PDF
 export interface CompressionInfo {
   originalSize: number;
   compressedSize: number;
@@ -110,3 +102,5 @@ export interface PdfMergeResult {
   pageCount: number;
   totalSize: number;
 }
+
+export type FormStep = "form" | "email" | "preview";

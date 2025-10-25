@@ -12,7 +12,7 @@ export const FormSignature: React.FC<
   const signatureWidth = 500; // Largura fixa
   const signatureHeight = 150; // Altura fixa
 
-  // ✅ Carregar assinatura existente quando o componente montar
+  // Carregar assinatura existente quando o componente montar
   useEffect(() => {
     if (initialSignature && signatureRef.current) {
       const img = new Image();

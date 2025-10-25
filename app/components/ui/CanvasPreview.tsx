@@ -53,7 +53,7 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
     // Desenhar textos e assinaturas
     textOverlays.forEach((overlay) => {
       if (overlay.type === "signature" && overlay.imageData) {
-        // ✅ CORREÇÃO: Verificar se a assinatura já foi carregada
+        // Verificar se a assinatura já foi carregada
         if (loadedSignatures.has(overlay.id)) {
           const signatureImg = new Image();
           signatureImg.onload = () => {
@@ -63,7 +63,7 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
           };
           signatureImg.src = overlay.imageData;
         } else {
-          // ✅ CORREÇÃO: Carregar assinatura e marcar como carregada
+          // Carregar assinatura e marcar como carregada
           const signatureImg = new Image();
           signatureImg.onload = () => {
             const width = overlay.width || 300;

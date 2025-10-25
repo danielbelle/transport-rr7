@@ -11,9 +11,9 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import Header from "~/components/layout/header";
 import Footer from "~/components/layout/footer";
-import UnifiedLoading from "./components/ui/UnifiedLoading";
+import Loading from "./components/ui/Loading";
 import { NotificationProvider } from "./lib/notification-context";
-import NotificationContainer from "./components/ui/NotificationContainer";
+import Notification from "./components/ui/Notification";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -55,7 +55,7 @@ export default function App() {
           <Outlet />
         </main>
         <Footer />
-        <NotificationContainer />
+        <Notification />
       </div>
     </NotificationProvider>
   );
@@ -66,10 +66,11 @@ export function HydrateFallback() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 flex items-center justify-center">
-        <UnifiedLoading
-          variant="fullpage"
+        <Loading
+          type="page"
           title="Carregando Sistema"
           message="Inicializando o editor multiplataforma..."
+          overlay
         />
       </main>
       <Footer />

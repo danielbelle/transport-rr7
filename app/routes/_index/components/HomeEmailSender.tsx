@@ -32,11 +32,9 @@ export default function HomeEmailSender({
     setCurrentStep: setGlobalCurrentStep,
   } = useDocumentStore();
 
-  // ✅ CORREÇÃO: Recuperar assinatura do sessionStorage ao montar
   useEffect(() => {
     const tempSignature = sessionStorage.getItem("temp_signature");
     if (tempSignature && !formData.signature) {
-      console.log("🔄 Recuperando assinatura do sessionStorage");
       onSignatureUpdate?.(tempSignature);
     }
   }, [formData.signature, onSignatureUpdate]);
@@ -66,7 +64,7 @@ export default function HomeEmailSender({
       "text_dias",
       "text_cidade",
       "text_email",
-      "signature", // ✅ Agora a assinatura é obrigatória aqui
+      "signature",
     ];
 
     const missingFields = requiredFields.filter(
@@ -83,7 +81,6 @@ export default function HomeEmailSender({
       );
     }
 
-    // ✅ CORREÇÃO: Validação mais flexível do email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const studentEmail = formData.text_email;
 
@@ -104,25 +101,14 @@ export default function HomeEmailSender({
     fieldKey: string,
     signatureData: string | null
   ) => {
-    // ✅ CORREÇÃO: Notificar o componente pai sobre a atualização da assinatura
     onSignatureUpdate?.(signatureData);
-    console.log(
-      "✅ Assinatura atualizada e propagada para o pai:",
-      signatureData ? "PRESENTE" : "REMOVIDA"
-    );
   };
 
-  // ✅ FUNÇÃO PARA LIMPAR TUDO APÓS ENVIO BEM-SUCEDIDO
   const resetAfterSuccessfulSend = () => {
-    // Reset arquivo anexado
     setUploadedFile(null);
     setCompressionInfo(null);
     setPdfBytes(null);
-
-    // Reset estado temporário
     resetTemporaryState();
-
-    // Volta para tela de formulário
     setGlobalCurrentStep("form");
   };
 
@@ -134,13 +120,9 @@ export default function HomeEmailSender({
     setCurrentStep("");
 
     try {
-      // ETAPA 1: Validação
       setCurrentStep("Validando formulário...");
-
-      // ✅ Valida apenas o formulário (incluindo assinatura)
       validateFormData();
 
-      // ETAPA 2: Geração do PDF
       setCurrentStep("Gerando PDF do formulário...");
       let formPdfBytes: Uint8Array;
       try {
@@ -155,7 +137,6 @@ export default function HomeEmailSender({
         );
       }
 
-      // ETAPA 3: Merge de PDFs
       let finalPdfBytes = formPdfBytes;
       let isMerged = false;
 
@@ -179,16 +160,14 @@ export default function HomeEmailSender({
         }
       }
 
-      // ETAPA 4: Compressão
       setCurrentStep("Verificando compressão...");
       let pdfToSend = finalPdfBytes;
 
-      // ✅ Gerar mensagem padrão automaticamente
       const message = generateDefaultMessage();
       const emailHtml = HomeEmailTemplates.formEmail(
-        "Formulário Preenchido com Anexo", // ✅ Assunto fixo
+        "Formulário Preenchido com Anexo",
         formData,
-        message // ✅ Mensagem padrão
+        message
       );
 
       const { PdfCompressUtils } = await import("~/lib/utils/pdf-compress");
@@ -214,8 +193,9 @@ export default function HomeEmailSender({
                 compressResult.info.compressedSize /
                 1024 /
                 1024
-              ).toFixed(2)} MB) mesmo após compressão. ` +
-                `O limite total do Resend é 15MB. Por favor, reduza o tamanho do PDF anexado.`
+              ).toFixed(
+                2
+              )} MB) mesmo após compressão. O limite total do Resend é 15MB. Por favor, reduza o tamanho do PDF anexado.`
             );
           }
         } catch (error) {
@@ -227,7 +207,6 @@ export default function HomeEmailSender({
         }
       }
 
-      // ETAPA 5: Envio do Email
       setCurrentStep("Enviando email...");
       const pdfBase64 = arrayBufferToBase64(pdfToSend);
 
@@ -237,8 +216,8 @@ export default function HomeEmailSender({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          to: "henrique.danielb@gmail.com", // ✅ Email fixo do destinatário
-          subject: "Formulário Preenchido com Anexo", // ✅ Assunto fixo
+          to: "henrique.danielb@gmail.com",
+          subject: "Formulário Preenchido com Anexo",
           html: emailHtml,
           attachments: [
             {
@@ -259,16 +238,10 @@ export default function HomeEmailSender({
         throw new Error(result.error || "Erro ao enviar email");
       }
 
-      // ✅ SUCESSO: Limpa TUDO e volta para formulário
       alert("Email enviado com sucesso!");
-
-      // Limpa todos os campos APÓS ENVIO BEM-SUCEDIDO
       resetAfterSuccessfulSend();
-
-      // Notifica o componente pai
       onEmailSent?.();
     } catch (error) {
-      // ❌ ERRO: Mantém TUDO como estava (incluindo PDF anexado)
       const errorMessage =
         error instanceof Error ? error.message : "Erro desconhecido";
       alert(`Erro: ${errorMessage}`);
@@ -281,7 +254,6 @@ export default function HomeEmailSender({
   const hasFormData =
     formData.text_nome && formData.text_rg && formData.text_cpf;
 
-  // ✅ Encontrar campo de assinatura
   const signatureField = homeFieldConfig.find(
     (field) => field.type === "signature"
   );
@@ -293,11 +265,10 @@ export default function HomeEmailSender({
       </h2>
 
       <form onSubmit={handleSendEmail} className="space-y-6">
-        {/* ✅ Seção: Assinatura */}
         {signatureField && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-2">
-              ✍️ Assinatura {formData.signature ? "✅" : "❌"}
+              Assinatura {formData.signature ? "✅" : "❌"}
             </h3>
             <FormSignature
               key={signatureField.key}
@@ -305,22 +276,19 @@ export default function HomeEmailSender({
               onSignatureChange={handleSignatureChange}
               initialSignature={formData.signature}
             />
-            {/* ✅ DEBUG */}
             {formData.signature && (
               <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
                 <p className="text-sm text-green-700 dark:text-green-300">
-                  ✅ Assinatura carregada: {formData.signature.substring(0, 50)}
-                  ...
+                  Assinatura carregada
                 </p>
               </div>
             )}
           </div>
         )}
 
-        {/* ✅ Seção: Anexar PDF */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-2">
-            📎 Anexar PDF
+            Anexar PDF
           </h3>
           <FileUpload
             onFileSelect={handleFileSelect}
@@ -334,7 +302,7 @@ export default function HomeEmailSender({
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <span className="text-green-700 dark:text-green-300">
-                    📄 {uploadedFile.name}
+                    {uploadedFile.name}
                   </span>
                   <span className="text-sm text-green-600 dark:text-green-400">
                     ({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)
@@ -348,10 +316,9 @@ export default function HomeEmailSender({
           )}
         </div>
 
-        {/* ✅ Informações do envio */}
         <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
           <h4 className="font-medium text-blue-800 dark:text-blue-300 mb-2">
-            ℹ️ Informações do Envio
+            Informações do Envio
           </h4>
           <div className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
             <p>
@@ -377,19 +344,18 @@ export default function HomeEmailSender({
           className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-md font-medium transition-colors"
         >
           {isSendingEmail
-            ? `📧 ${currentStep || "Enviando..."}`
-            : "📧 Enviar Documento por Email"}
+            ? `${currentStep || "Enviando..."}`
+            : "Enviar Documento por Email"}
         </button>
       </form>
 
-      {/* ✅ Botão para voltar sem limpar nada - APENAS AQUI */}
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
         <button
           type="button"
           onClick={() => setGlobalCurrentStep("form")}
           className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-md font-medium transition-colors"
         >
-          ← Voltar ao Formulário (Manter Anexo)
+          Voltar ao Formulário (Manter Anexo)
         </button>
       </div>
     </div>

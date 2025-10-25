@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import type { Route } from "./+types/route";
-import HomeForm from "./components/HomeForm";
+import Form from "~/components/ui/Form";
 import HomeEmailSender from "./components/HomeEmailSender";
 import HomeLiveImage from "./components/HomeLiveImage";
 import type { FormData } from "~/lib/types";
 import { useDocumentStore } from "~/lib/stores";
+import { useForm } from "~/hooks/useForm";
+import { homeFieldConfig } from "./utils/home-field-config";
 
-// Estado inicial fixo para evitar hydration mismatch
 const initialFormData: FormData = {
   text_nome: "",
   text_rg: "",
@@ -24,25 +25,19 @@ const initialFormData: FormData = {
 
 export default function HomePage() {
   const [formData, setFormData] = useState<FormData>(initialFormData);
-
   const { currentStep, setCurrentStep } = useDocumentStore();
 
-  // ✅ CORREÇÃO: Recuperar assinatura do sessionStorage ao montar
   useEffect(() => {
     const tempSignature = sessionStorage.getItem("temp_signature");
     if (tempSignature) {
-      console.log(
-        "🔄 Recuperando assinatura do sessionStorage no componente pai"
-      );
       setFormData((prev) => ({
         ...prev,
         signature: tempSignature,
       }));
-      sessionStorage.removeItem("temp_signature"); // Limpar após usar
+      sessionStorage.removeItem("temp_signature");
     }
   }, []);
 
-  // ✅ GARANTIR que sempre inicie no formulário
   useEffect(() => {
     setCurrentStep("form");
   }, [setCurrentStep]);
@@ -53,23 +48,26 @@ export default function HomePage() {
 
   const handleEmailSent = () => {
     setFormData(initialFormData);
-    sessionStorage.removeItem("temp_signature"); // Limpar ao enviar email
+    sessionStorage.removeItem("temp_signature");
   };
 
-  // ✅ CORREÇÃO: Função para atualizar apenas a assinatura
   const handleSignatureUpdate = (signatureData: string | null) => {
     setFormData((prev) => ({
       ...prev,
       signature: signatureData || "",
     }));
 
-    // ✅ Também salvar no sessionStorage como backup
     if (signatureData) {
       sessionStorage.setItem("temp_signature", signatureData);
     } else {
       sessionStorage.removeItem("temp_signature");
     }
   };
+
+  // Filtrar campos visíveis excluindo a assinatura
+  const visibleFields = homeFieldConfig.filter(
+    (field) => !field.hidden && field.type !== "signature"
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
@@ -88,13 +86,35 @@ export default function HomePage() {
             <HomeEmailSender
               formData={formData}
               onEmailSent={handleEmailSent}
-              onSignatureUpdate={handleSignatureUpdate} // ✅ Nova prop
+              onSignatureUpdate={handleSignatureUpdate}
             />
           ) : (
-            <HomeForm
+            <Form
+              fields={visibleFields}
+              formData={formData}
               onFormDataChange={handleFormDataChange}
-              initialData={formData}
-            />
+            >
+              <div className="pt-6 border-t border-gray-200 dark:border-gray-600">
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep("email")}
+                  disabled={
+                    !formData.text_nome ||
+                    !formData.text_rg ||
+                    !formData.text_cpf
+                  }
+                  className={`w-full py-3 px-4 rounded-md font-medium transition-colors ${
+                    formData.text_nome && formData.text_rg && formData.text_cpf
+                      ? "bg-green-600 hover:bg-green-700 text-white cursor-pointer"
+                      : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                  }`}
+                >
+                  {formData.text_nome && formData.text_rg && formData.text_cpf
+                    ? "Continuar para Envio por Email"
+                    : "Preencha todos os campos para continuar"}
+                </button>
+              </div>
+            </Form>
           )}
 
           <HomeLiveImage formData={formData} />

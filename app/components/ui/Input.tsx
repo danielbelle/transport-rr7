@@ -1,7 +1,8 @@
 import React from "react";
-import type { JSX } from "react";
+import type { FieldConfig } from "~/lib/types";
 
 interface InputProps {
+  // Props do Input genérico
   type?: "text" | "number" | "email" | "tel" | "date" | "password";
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -13,6 +14,8 @@ interface InputProps {
   disabled?: boolean;
   className?: string;
   error?: string;
+
+  field?: FieldConfig;
 }
 
 export default function Input({
@@ -27,18 +30,24 @@ export default function Input({
   disabled = false,
   className = "",
   error,
-}: InputProps): JSX.Element {
+  field, // Prop opcional para compatibilidade com FormInput
+}: InputProps) {
   const inputId = id || name;
+
+  // Se field for fornecido, usa as configurações do field
+  const finalLabel = field?.label || label;
+  const finalPlaceholder = field?.placeholder || placeholder;
+  const finalRequired = field?.required || required;
 
   return (
     <div className={`flex flex-col ${className}`}>
-      {label && (
+      {finalLabel && (
         <label
           htmlFor={inputId}
           className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
         >
-          {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {finalLabel}
+          {finalRequired && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
 
@@ -48,7 +57,7 @@ export default function Input({
         name={name}
         value={value}
         onChange={onChange}
-        placeholder={placeholder}
+        placeholder={finalPlaceholder}
         disabled={disabled}
         className={`
           w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-700 
@@ -61,11 +70,44 @@ export default function Input({
           }
           ${disabled ? "opacity-50 cursor-not-allowed" : ""}
         `}
+        required={finalRequired}
       />
 
       {error && (
         <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>
       )}
     </div>
+  );
+}
+
+// Helper para uso como FormInput (mantém compatibilidade)
+export function FormInput({
+  field,
+  value,
+  onChange,
+}: {
+  field: FieldConfig;
+  value: string;
+  onChange: (fieldKey: string, value: string) => void;
+}) {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(field.key, e.target.value);
+  };
+
+  return (
+    <Input
+      field={field}
+      type={
+        field.type === "number"
+          ? "number"
+          : field.type === "email"
+          ? "email"
+          : "text"
+      }
+      value={value}
+      onChange={handleChange}
+      placeholder={field.placeholder}
+      required={field.required}
+    />
   );
 }
