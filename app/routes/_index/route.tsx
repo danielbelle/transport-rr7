@@ -34,7 +34,6 @@ export default function HomePage() {
         ...prev,
         signature: tempSignature,
       }));
-      sessionStorage.removeItem("temp_signature");
     }
   }, []);
 
@@ -44,6 +43,14 @@ export default function HomePage() {
 
   const handleFormDataChange = (data: FormData) => {
     setFormData(data);
+  };
+
+  const clearSignature = () => {
+    setFormData((prev) => ({
+      ...prev,
+      signature: "",
+    }));
+    sessionStorage.removeItem("temp_signature");
   };
 
   const handleEmailSent = () => {

@@ -123,11 +123,22 @@ export default function HomeEmailSender({
       let finalPdfBytes = formPdfBytes;
       let isMerged = false;
 
-      if (uploadedFile) {
+      //  garantir que uploadedFile existe e é válido
+      if (
+        uploadedFile &&
+        uploadedFile instanceof File &&
+        typeof uploadedFile.arrayBuffer === "function"
+      ) {
         setCurrentStep("Mesclando PDFs...");
         try {
           const { PdfMergeUtils } = await import("~/lib/utils/pdf-merge");
           const uploadedPdfBytes = await uploadedFile.arrayBuffer();
+
+          //  garantir que o arrayBuffer não está vazio
+          if (!uploadedPdfBytes || uploadedPdfBytes.byteLength === 0) {
+            throw new Error("O arquivo anexado está vazio ou corrompido");
+          }
+
           const mergeResult = await PdfMergeUtils.mergePdfs(
             formPdfBytes,
             new Uint8Array(uploadedPdfBytes)
@@ -141,6 +152,12 @@ export default function HomeEmailSender({
             }`
           );
         }
+      } else if (uploadedFile) {
+        // Caso uploadedFile existe mas não é um File válido
+        console.warn("UploadedFile inválido:", uploadedFile);
+        throw new Error(
+          "O arquivo anexado é inválido. Por favor, selecione novamente."
+        );
       }
 
       setCurrentStep("Verificando compressão...");
@@ -259,13 +276,6 @@ export default function HomeEmailSender({
               onSignatureChange={handleSignatureChange}
               initialSignature={formData.signature}
             />
-            {formData.signature && (
-              <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
-                <p className="text-sm text-green-700 dark:text-green-300">
-                  Assinatura carregada
-                </p>
-              </div>
-            )}
           </div>
         )}
 
@@ -277,53 +287,18 @@ export default function HomeEmailSender({
             onFileSelect={handleFileSelect}
             accept=".pdf"
             label="Selecionar PDF para Anexar"
-            required={false}
+            required={true}
           />
-
-          {uploadedFile && (
-            <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <span className="text-green-700 dark:text-green-300">
-                    {uploadedFile.name}
-                  </span>
-                  <span className="text-sm text-green-600 dark:text-green-400">
-                    ({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)
-                  </span>
-                </div>
-                <span className="text-xs bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 px-2 py-1 rounded">
-                  Pronto para enviar
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
-          <h4 className="font-medium text-blue-800 dark:text-blue-300 mb-2">
-            Informações do Envio
-          </h4>
-          <div className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
-            <p>
-              <strong>Destinatário:</strong> henrique.danielb@gmail.com
-            </p>
-            <p>
-              <strong>Assunto:</strong> Formulário Preenchido com Anexo
-            </p>
-            <p>
-              <strong>Mensagem:</strong> Será gerada automaticamente com os
-              dados do formulário
-            </p>
-            <p>
-              <strong>Email do aluno no PDF:</strong>{" "}
-              {formData.text_email || "Não preenchido"}
-            </p>
-          </div>
         </div>
 
         <button
           type="submit"
-          disabled={isSendingEmail || !hasFormData || !formData.signature}
+          disabled={
+            isSendingEmail ||
+            !hasFormData ||
+            !formData.signature ||
+            !uploadedFile
+          }
           className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-md font-medium transition-colors"
         >
           {isSendingEmail
