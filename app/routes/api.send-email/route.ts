@@ -1,7 +1,6 @@
 import { Resend } from "resend";
 import type { ActionFunctionArgs } from "react-router";
-import { env } from "~/lib/env";
-import { validateEmailData } from "~/lib/validation";
+import { validateEmailData, env } from "~/lib/utils";
 
 export async function action({ request }: ActionFunctionArgs) {
   try {

@@ -1,3 +1,4 @@
-// Barrel exports para utilitários
-export * from "~/lib/utils/pdf-compress";
-export * from "~/lib/utils/pdf-merge";
+export * from "./utils/pdf-compress";
+export * from "./utils/pdf-merge";
+export * from "./validation";
+export * from "./env";

@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import type { FormData, FlexibleFormData, FieldConfig } from "~/lib/types";
-import { validateFormData } from "~/lib/validation"; // ← IMPORTAR validação Zod
+import { validateFormData } from "~/lib/utils";
 
 export function useForm(initialData: FormData, fieldConfig: FieldConfig[]) {
-  const [formData, setFormData] = useState<FlexibleFormData>(
-    initialData as FlexibleFormData
-  );
+  const [formData, setFormData] = useState<FormData>(initialData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isFormComplete, setIsFormComplete] = useState(false);
 
@@ -36,22 +34,26 @@ export function useForm(initialData: FormData, fieldConfig: FieldConfig[]) {
     const result = validateFormData(formData);
 
     if (!result.success) {
-      // Converter erros do Zod para o formato do estado
       const newErrors: Record<string, string> = {};
       result.errors.forEach((error) => {
-        // Mapear mensagens de erro para campos específicos
-        if (error.includes("Nome")) newErrors.text_nome = error;
-        else if (error.includes("RG")) newErrors.text_rg = error;
-        else if (error.includes("CPF")) newErrors.text_cpf = error;
-        else if (error.includes("Email")) newErrors.text_email = error;
-        else if (error.includes("Universidade"))
-          newErrors.text_universidade = error;
-        else if (error.includes("Semestre")) newErrors.text_semestre = error;
-        else if (error.includes("Curso")) newErrors.text_curso = error;
-        else if (error.includes("Mês")) newErrors.text_mes = error;
-        else if (error.includes("Dias")) newErrors.text_dias = error;
-        else if (error.includes("Cidade")) newErrors.text_cidade = error;
-        else if (error.includes("Assinatura")) newErrors.signature = error;
+        // Mapeamento mais eficiente
+        const fieldMap: Record<string, string> = {
+          Nome: "text_nome",
+          RG: "text_rg",
+          CPF: "text_cpf",
+          Email: "text_email",
+          Universidade: "text_universidade",
+          Semestre: "text_semestre",
+          Curso: "text_curso",
+          Mês: "text_mes",
+          Dias: "text_dias",
+          Cidade: "text_cidade",
+          Assinatura: "signature",
+        };
+
+        Object.entries(fieldMap).forEach(([key, fieldKey]) => {
+          if (error.includes(key)) newErrors[fieldKey] = error;
+        });
       });
 
       setErrors(newErrors);
@@ -88,9 +90,14 @@ export function useForm(initialData: FormData, fieldConfig: FieldConfig[]) {
       .filter((field) => field.required && field.type !== "signature")
       .map((field) => field.key);
 
-    const isComplete = requiredFields.every(
-      (field) => formData[field]?.toString().trim() !== ""
-    );
+    const isComplete = requiredFields.every((field) => {
+      // Type guard para acesso seguro
+      if (field in formData) {
+        const value = formData[field as keyof FormData]?.toString().trim();
+        return value !== "";
+      }
+      return false;
+    });
 
     setIsFormComplete(isComplete);
   }, [formData, fieldConfig]);

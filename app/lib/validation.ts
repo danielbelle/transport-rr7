@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isValidationEnabled } from "./env";
+import { isValidationEnabled } from "~/lib/utils";
 
 export function validateWithZod<T>(
   schema: z.ZodSchema<T>,

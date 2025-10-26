@@ -1,3 +1,35 @@
+export interface BaseFieldConfig {
+  key: string;
+  name: string;
+  label: string;
+  placeholder: string;
+  required: boolean;
+  hidden?: boolean;
+}
+
+export interface TextFieldConfig extends BaseFieldConfig {
+  type: "text" | "number" | "email" | "tel" | "date";
+  font: number;
+  x: number;
+  y: number;
+  fontPdf: number;
+  xPdf: number;
+  yPdf: number;
+}
+
+export interface SignatureFieldConfig extends BaseFieldConfig {
+  type: "signature";
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
+  fontPdf: number;
+  xPdf: number;
+  yPdf: number;
+}
+
+export type FieldConfig = TextFieldConfig | SignatureFieldConfig;
+
 export interface FormData {
   text_nome: string;
   text_rg: string;
@@ -15,24 +47,6 @@ export interface FormData {
 
 export interface FlexibleFormData extends FormData {
   [key: string]: string;
-}
-
-export interface FieldConfig {
-  key: string;
-  name: string;
-  label: string;
-  placeholder: string;
-  type: "text" | "number" | "email" | "tel" | "date" | "signature";
-  font: number;
-  x: number;
-  y: number;
-  fontPdf: number;
-  xPdf: number;
-  yPdf: number;
-  required: boolean;
-  hidden?: boolean;
-  width?: number;
-  height?: number;
 }
 
 export interface FormInputProps {

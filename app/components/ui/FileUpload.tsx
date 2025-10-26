@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import type { FileUploadProps } from "~/lib/types";
-import { validatePdfFile } from "~/lib/validation";
+import { validatePdfFile } from "~/lib/utils";
 
 export function FileUpload({
   onFileSelect,

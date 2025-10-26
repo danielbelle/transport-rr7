@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { FileUpload } from "~/components/ui/FileUpload";
 import { FormSignature } from "~/components/ui/FormSignature";
 import { useDocumentStore } from "~/lib/stores";
-import type { EmailSenderProps, CompressionInfo, FormData } from "~/lib/types";
+import type { EmailSenderProps, CompressionInfo } from "~/lib/types";
 import {
   HomeEmailTemplates,
   generateHomeDefaultMessage,
 } from "../utils/email-utils";
 import { homeFieldConfig } from "~/routes/_index/utils/home-field-config";
-import { validateFormData, validatePdfFile } from "~/lib/validation";
+import { validateFormData, validatePdfFile } from "~/lib/utils";
 
 interface HomeEmailSenderProps extends EmailSenderProps {
   onSignatureUpdate?: (signatureData: string | null) => void;
