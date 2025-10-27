@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router";
 import { useEffect } from "react";
-import type { LoaderFunction } from "react-router";
 import Button from "~/components/ui/Button";
 import Card from "~/components/ui/Card";
 import type { JSX } from "react";
