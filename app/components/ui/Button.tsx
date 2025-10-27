@@ -1,16 +1,5 @@
 import React from "react";
-import type { JSX } from "react";
-
-interface ButtonProps {
-  children: React.ReactNode;
-  onClick?: () => void;
-  type?: "button" | "submit" | "reset";
-  variant?: "primary" | "secondary" | "danger" | "ghost";
-  size?: "sm" | "md" | "lg";
-  disabled?: boolean;
-  loading?: boolean;
-  className?: string;
-}
+import type { ButtonProps } from "~/lib/types";
 
 export default function Button({
   children,
@@ -21,7 +10,7 @@ export default function Button({
   disabled = false,
   loading = false,
   className = "",
-}: ButtonProps): JSX.Element {
+}: ButtonProps) {
   const baseClasses =
     "font-medium rounded-lg transition-all transform focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer";
 
@@ -73,7 +62,7 @@ export default function Button({
   );
 }
 
-function Spinner(): JSX.Element {
+function Spinner() {
   return (
     <svg
       className="animate-spin h-4 w-4 text-current"

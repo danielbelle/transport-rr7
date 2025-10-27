@@ -1,15 +1,7 @@
 import React from "react";
-import type { JSX } from "react";
+import type { CardProps } from "~/lib/types";
 
-interface CardProps {
-  children: React.ReactNode;
-  className?: string;
-}
-
-export default function Card({
-  children,
-  className = "",
-}: CardProps): JSX.Element {
+export default function Card({ children, className = "" }: CardProps) {
   return (
     <div
       className={`
@@ -24,23 +16,11 @@ export default function Card({
   );
 }
 
-Card.Header = function CardHeader({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}): JSX.Element {
+Card.Header = function CardHeader({ children, className = "" }: CardProps) {
   return <div className={`mb-6 ${className}`}>{children}</div>;
 };
 
-Card.Title = function CardTitle({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}): JSX.Element {
+Card.Title = function CardTitle({ children, className = "" }: CardProps) {
   return (
     <h2
       className={`text-xl font-bold text-gray-800 dark:text-white ${className}`}
@@ -50,12 +30,6 @@ Card.Title = function CardTitle({
   );
 };
 
-Card.Content = function CardContent({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}): JSX.Element {
+Card.Content = function CardContent({ children, className = "" }: CardProps) {
   return <div className={className}>{children}</div>;
 };

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { CanvasPreview } from "~/components/ui/CanvasPreview";
-import { homeFieldConfig } from "~/routes/_index/utils/home-field-config";
+import { homeFieldConfig } from "~/routes/editor/utils/home-field-config";
 import type { TextOverlay, LiveImageProps, TappFormData } from "~/lib/types";
 
 export default function HomeLiveImage({ formData }: LiveImageProps) {

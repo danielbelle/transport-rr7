@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import type { FileUploadProps } from "~/lib/types";
 import { validatePdfFile } from "~/lib/utils";
+import { Formatters } from "~/lib/utils/formatters";
 
 export function FileUpload({
   onFileSelect,
@@ -10,13 +11,6 @@ export function FileUpload({
 }: FileUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Função para formatar tamanho do arquivo corretamente
-  const formatFileSize = (bytes: number): string => {
-    if (!bytes || bytes === 0 || isNaN(bytes)) return "(0 MB)";
-    const sizeInMB = bytes / 1024 / 1024;
-    return `(${sizeInMB.toFixed(2)} MB)`;
-  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -80,7 +74,7 @@ export function FileUpload({
               {selectedFile.name}
             </span>
             <span className="text-sm text-green-600 dark:text-green-400">
-              {formatFileSize(selectedFile.size)}
+              {Formatters.fileSize(selectedFile.size)}
             </span>
           </div>
           <button

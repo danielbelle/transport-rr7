@@ -1,25 +1,7 @@
-import React from "react";
-import type { FieldConfig } from "~/lib/types";
+import React, { memo } from "react";
+import type { FormInputProps } from "~/lib/types";
 
-interface FormInputProps {
-  // Props para uso COM field (formulários)
-  field?: FieldConfig;
-
-  // Props para uso SEM field (uso genérico)
-  type?: "text" | "number" | "email" | "tel" | "date" | "password";
-  value: string;
-  onChange: (fieldKey: string, value: string) => void;
-  placeholder?: string;
-  label?: string;
-  name?: string;
-  id?: string;
-  required?: boolean;
-  disabled?: boolean;
-  className?: string;
-  error?: string;
-}
-
-export function FormInput({
+export const FormInput = memo(function FormInput({
   field,
   type = "text",
   value,
@@ -91,4 +73,6 @@ export function FormInput({
       )}
     </div>
   );
-}
+});
+
+FormInput.displayName = "FormInput";

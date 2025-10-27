@@ -1,12 +1,12 @@
 import type { FieldConfig } from "~/lib/types";
+import { FieldFactories } from "~/lib/utils/field-config-factory";
 
 export const homeFieldConfig: FieldConfig[] = [
-  {
+  FieldFactories.text({
     key: "text_nome",
     name: "text_nome",
     label: "Nome Completo",
     placeholder: "Nome completo",
-    type: "text",
     font: 14,
     x: 119,
     y: 133,
@@ -14,13 +14,13 @@ export const homeFieldConfig: FieldConfig[] = [
     xPdf: 110,
     yPdf: 135,
     required: true,
-  },
-  {
+  }),
+
+  FieldFactories.text({
     key: "text_rg",
     name: "text_rg",
     label: "RG",
     placeholder: "Seu RG",
-    type: "text",
     font: 14,
     x: 261,
     y: 169,
@@ -28,13 +28,13 @@ export const homeFieldConfig: FieldConfig[] = [
     xPdf: 215,
     yPdf: 165,
     required: true,
-  },
-  {
+  }),
+
+  FieldFactories.text({
     key: "text_cpf",
     name: "text_cpf",
     label: "CPF",
     placeholder: "Seu CPF",
-    type: "text",
     font: 16,
     x: 100,
     y: 206,
@@ -42,13 +42,13 @@ export const homeFieldConfig: FieldConfig[] = [
     xPdf: 100,
     yPdf: 190,
     required: true,
-  },
-  {
+  }),
+
+  FieldFactories.text({
     key: "text_universidade",
     name: "text_universidade",
     label: "Universidade",
     placeholder: "Sua universidade",
-    type: "text",
     font: 12,
     x: 90,
     y: 245,
@@ -56,13 +56,13 @@ export const homeFieldConfig: FieldConfig[] = [
     xPdf: 90,
     yPdf: 220,
     required: true,
-  },
-  {
+  }),
+
+  FieldFactories.text({
     key: "text_semestre",
     name: "text_semestre",
     label: "Semestre",
     placeholder: "Semestre atual",
-    type: "text",
     font: 12,
     x: 268,
     y: 283,
@@ -70,13 +70,13 @@ export const homeFieldConfig: FieldConfig[] = [
     xPdf: 215,
     yPdf: 247,
     required: true,
-  },
-  {
+  }),
+
+  FieldFactories.text({
     key: "text_curso",
     name: "text_curso",
     label: "Curso",
     placeholder: "Nome do curso",
-    type: "text",
     font: 12,
     x: 90,
     y: 320,
@@ -84,13 +84,13 @@ export const homeFieldConfig: FieldConfig[] = [
     xPdf: 90,
     yPdf: 275,
     required: true,
-  },
-  {
+  }),
+
+  FieldFactories.text({
     key: "text_mes",
     name: "text_mes",
     label: "Mês",
     placeholder: "Mês de referência",
-    type: "text",
     font: 8,
     x: 357,
     y: 430,
@@ -98,13 +98,13 @@ export const homeFieldConfig: FieldConfig[] = [
     xPdf: 287,
     yPdf: 357,
     required: true,
-  },
-  {
+  }),
+
+  FieldFactories.text({
     key: "text_dias",
     name: "text_dias",
     label: "Dias",
     placeholder: "Número de dias",
-    type: "text",
     font: 12,
     x: 620,
     y: 430,
@@ -112,13 +112,13 @@ export const homeFieldConfig: FieldConfig[] = [
     xPdf: 480,
     yPdf: 357,
     required: true,
-  },
-  {
+  }),
+
+  FieldFactories.text({
     key: "text_cidade",
     name: "text_cidade",
     label: "Cidade",
     placeholder: "Cidade da instituição",
-    type: "text",
     font: 12,
     x: 440,
     y: 468,
@@ -126,30 +126,23 @@ export const homeFieldConfig: FieldConfig[] = [
     xPdf: 340,
     yPdf: 385,
     required: true,
-  },
+  }),
+
   // Campo email sem coordenadas x,y (apenas dado)
-  {
+  FieldFactories.hidden({
     key: "text_email",
     name: "text_email",
     label: "Email",
     placeholder: "Seu email",
-    type: "email",
-    font: 0, // 0 = não aparece na imagem
-    x: 0, // 0 = não aparece na imagem
-    y: 0, // 0 = não aparece na imagem
-    fontPdf: 0, // 0 = não aparece no PDF
-    xPdf: 0, // 0 = não aparece no PDF
-    yPdf: 0, // 0 = não aparece no PDF
     required: true,
-  },
+  }),
 
   // Campo de assinatura
-  {
+  FieldFactories.signature({
     key: "signature",
     name: "signature",
     label: "Assinatura",
     placeholder: "Clique para assinar",
-    type: "signature",
     font: 0,
     x: 290,
     y: 530,
@@ -159,15 +152,14 @@ export const homeFieldConfig: FieldConfig[] = [
     width: 240,
     height: 50,
     required: true,
-  },
+  }),
 
-  // Campo oculto para nome da assinatura (automático) - aparece na imagem e PDF
-  {
+  // Campo oculto para nome da assinatura (automático)
+  FieldFactories.text({
     key: "text_repete",
     name: "text_repete",
     label: "Nome para Assinatura",
     placeholder: "Nome para assinatura no documento",
-    type: "text",
     font: 12,
     x: 323,
     y: 600,
@@ -175,6 +167,6 @@ export const homeFieldConfig: FieldConfig[] = [
     xPdf: 260,
     yPdf: 485,
     required: false,
-    hidden: true, // Campo oculto no formulário - preenchido automaticamente
-  },
+    hidden: true,
+  }),
 ];

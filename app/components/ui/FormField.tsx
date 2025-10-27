@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { FieldConfig } from "~/lib/types";
 import { FormInput } from "~/components/ui/FormInput";
 
@@ -6,14 +7,31 @@ interface FormFieldProps {
   value: string;
   error?: string;
   onChange: (key: string, value: string) => void;
+  className?: string; // ✅ Adicionar se necessário
 }
 
-export function FormField({ field, value, error, onChange }: FormFieldProps) {
+export const FormField = memo(function FormField({
+  field,
+  value,
+  error,
+  onChange,
+  className = "", // ✅ Adicionar se necessário
+}: FormFieldProps) {
   if (field.hidden) return null;
 
   const handleChange = (fieldKey: string, newValue: string) => {
     onChange(fieldKey, newValue);
   };
 
-  return <FormInput field={field} value={value} onChange={handleChange} />;
-}
+  return (
+    <FormInput
+      field={field}
+      value={value}
+      onChange={handleChange}
+      error={error}
+      className={className}
+    />
+  );
+});
+
+FormField.displayName = "FormField";

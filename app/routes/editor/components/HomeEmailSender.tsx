@@ -6,8 +6,8 @@ import type { EmailSenderProps, CompressionInfo } from "~/lib/types";
 import {
   HomeEmailTemplates,
   generateHomeDefaultMessage,
-} from "~/routes/_index/utils/email-utils";
-import { homeFieldConfig } from "~/routes/_index/utils/home-field-config";
+} from "~/routes/editor/utils/email-utils";
+import { homeFieldConfig } from "~/routes/editor/utils/home-field-config";
 import { validateFormData, validatePdfFile } from "~/lib/utils";
 
 interface HomeEmailSenderProps extends EmailSenderProps {
@@ -124,24 +124,17 @@ export default function HomeEmailSender({
       let isMerged = false;
 
       //  garantir que uploadedFile existe e é válido
-      if (
-        uploadedFile &&
-        uploadedFile instanceof File &&
-        typeof uploadedFile.arrayBuffer === "function"
-      ) {
+      if (uploadedFile && uploadedFile instanceof File) {
         setCurrentStep("Mesclando PDFs...");
         try {
           const { PdfMergeUtils } = await import("~/lib/utils/pdf-merge");
           const uploadedPdfBytes = await uploadedFile.arrayBuffer();
 
-          //  garantir que o arrayBuffer não está vazio
-          if (!uploadedPdfBytes || uploadedPdfBytes.byteLength === 0) {
-            throw new Error("O arquivo anexado está vazio ou corrompido");
-          }
+          const uploadedPdfUint8 = new Uint8Array(uploadedPdfBytes);
 
           const mergeResult = await PdfMergeUtils.mergePdfs(
             formPdfBytes,
-            new Uint8Array(uploadedPdfBytes)
+            uploadedPdfUint8
           );
           finalPdfBytes = mergeResult.mergedBytes;
           isMerged = true;

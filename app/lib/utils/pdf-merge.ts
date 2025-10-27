@@ -1,5 +1,6 @@
 import { PDFDocument } from "pdf-lib";
 import type { PdfMergeResult } from "~/lib/types";
+import { Logger } from "~/lib/utils";
 
 /**
  * Utilitários para merge de PDFs
@@ -39,8 +40,14 @@ export class PdfMergeUtils {
         totalSize: mergedBytes.length,
       };
 
+      Logger.log("Merge de PDFs concluído:", {
+        pages: result.pageCount,
+        tamanho: this.formatBytes(result.totalSize),
+      });
+
       return result;
     } catch (error) {
+      Logger.error("Erro no merge de PDFs:", error);
       throw new Error(
         `Falha no merge: ${
           error instanceof Error ? error.message : "Erro desconhecido"

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import type { CanvasPreviewProps } from "~/lib/types";
 
 export const CanvasPreview: React.FC<CanvasPreviewProps> = React.memo(
@@ -20,14 +20,8 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = React.memo(
       img.src = imageUrl;
     }, [imageUrl]);
 
-    // Redesenhar quando overlays mudarem
-    useEffect(() => {
-      if (isBackgroundLoaded) {
-        drawCanvas();
-      }
-    }, [textOverlays, isBackgroundLoaded, loadedSignatures]);
-
-    const drawCanvas = () => {
+    // Função de desenho memoizada
+    const drawCanvas = useCallback(() => {
       const canvas = canvasRef.current;
       if (!canvas || !backgroundImageRef.current) return;
 
@@ -49,26 +43,17 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = React.memo(
       // Desenhar textos e assinaturas
       textOverlays.forEach((overlay) => {
         if (overlay.type === "signature" && overlay.imageData) {
-          // Verificar se a assinatura já foi carregada
-          if (loadedSignatures.has(overlay.id)) {
-            const signatureImg = new Image();
-            signatureImg.onload = () => {
-              const width = overlay.width || 300;
-              const height = overlay.height || 100;
-              ctx.drawImage(signatureImg, overlay.x, overlay.y, width, height);
-            };
-            signatureImg.src = overlay.imageData;
-          } else {
-            // Carregar assinatura e marcar como carregada
-            const signatureImg = new Image();
-            signatureImg.onload = () => {
-              const width = overlay.width || 300;
-              const height = overlay.height || 100;
-              ctx.drawImage(signatureImg, overlay.x, overlay.y, width, height);
-              setLoadedSignatures((prev) => new Set(prev).add(overlay.id));
-            };
-            signatureImg.src = overlay.imageData;
-          }
+          // Sempre carregar a assinatura, não verificar se já foi carregada
+          const signatureImg = new Image();
+          signatureImg.onload = () => {
+            const width = overlay.width || 300;
+            const height = overlay.height || 100;
+            ctx.drawImage(signatureImg, overlay.x, overlay.y, width, height);
+          };
+          signatureImg.onerror = () => {
+            console.error("Erro ao carregar assinatura no preview");
+          };
+          signatureImg.src = overlay.imageData;
         } else if (overlay.text && overlay.text.trim() !== "") {
           // Desenhar texto normal
           ctx.font = `${overlay.fontSize}px Arial`;
@@ -76,7 +61,14 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = React.memo(
           ctx.fillText(overlay.text, overlay.x, overlay.y);
         }
       });
-    };
+    }, [textOverlays, loadedSignatures]);
+
+    // Redesenhar quando overlays mudarem
+    useEffect(() => {
+      if (isBackgroundLoaded) {
+        drawCanvas();
+      }
+    }, [textOverlays, isBackgroundLoaded, drawCanvas]);
 
     return (
       <div className="space-y-4">
@@ -96,3 +88,5 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = React.memo(
     );
   }
 );
+
+CanvasPreview.displayName = "CanvasPreview";

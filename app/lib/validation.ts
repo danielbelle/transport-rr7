@@ -1,12 +1,13 @@
 import { z } from "zod";
 import { isValidationEnabled } from "~/lib/utils";
+import { Logger } from "./utils/logger";
 
 export function validateWithZod<T>(
   schema: z.ZodSchema<T>,
   data: unknown
 ): { success: true; data: T } | { success: false; errors: string[] } {
   if (!isValidationEnabled) {
-    console.log("🔧 Validação Zod desabilitada via .env");
+    Logger.log("🔧 Validação Zod desabilitada via .env");
     return { success: true, data: data as T };
   }
 
@@ -16,6 +17,7 @@ export function validateWithZod<T>(
     return { success: true, data: result.data };
   } else {
     const errors = result.error.issues.map((issue) => issue.message);
+    Logger.error("Erro de validação:", errors);
     return { success: false, errors };
   }
 }

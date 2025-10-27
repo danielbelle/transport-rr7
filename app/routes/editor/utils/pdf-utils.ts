@@ -1,6 +1,8 @@
-import { PDFDocument, rgb } from "pdf-lib";
+import { rgb } from "pdf-lib";
 import { homeFieldConfig } from "./home-field-config";
 import type { TappFormData, FieldConfig } from "~/lib/types";
+import { LazyPDFDocument } from "~/components/lazy/LazyComponents";
+import { Logger } from "~/lib/utils/logger";
 
 /**
  * Gera PDF editado com os dados do formulário - ESPECÍFICO para home
@@ -10,12 +12,11 @@ export async function generateHomeFormPdf(
 ): Promise<Uint8Array> {
   try {
     const templateBytes = await loadPdfTemplate();
-    const pdfDoc = await PDFDocument.load(templateBytes);
+    const pdfDoc = await LazyPDFDocument.load(templateBytes);
     const pages = pdfDoc.getPages();
     const page = pages[0];
     const pageHeight = page.getHeight();
 
-    // ✅ SIMPLIFICADO - Remove FlexibleFormData desnecessário
     homeFieldConfig.forEach((field) => {
       if (field.type === "signature") return;
 
@@ -62,6 +63,7 @@ export async function generateHomeFormPdf(
     const pdfBytes = await pdfDoc.save();
     return pdfBytes;
   } catch (error) {
+    Logger.error("Erro na geração do PDF:", error);
     throw new Error(
       `Falha na geração do PDF: ${
         error instanceof Error ? error.message : "Erro desconhecido"
@@ -70,11 +72,10 @@ export async function generateHomeFormPdf(
   }
 }
 
-// Resto do código permanece igual...
 /**
- * Carrega template PDF específico da home
+ * Carrega template PDF específico da home e converte para Uint8Array
  */
-async function loadPdfTemplate(): Promise<ArrayBuffer> {
+async function loadPdfTemplate(): Promise<Uint8Array> {
   try {
     const pdfUrl = "/samples/sample.pdf";
     const response = await fetch(pdfUrl);
@@ -85,8 +86,11 @@ async function loadPdfTemplate(): Promise<ArrayBuffer> {
       );
     }
 
-    return await response.arrayBuffer();
+    const arrayBuffer = await response.arrayBuffer();
+    // Converter ArrayBuffer para Uint8Array
+    return new Uint8Array(arrayBuffer);
   } catch (error) {
+    Logger.error("Erro ao carregar template PDF:", error);
     throw new Error(
       `Não foi possível carregar o template PDF: ${
         error instanceof Error ? error.message : "Erro desconhecido"
@@ -99,7 +103,7 @@ async function loadPdfTemplate(): Promise<ArrayBuffer> {
  * Adiciona assinatura ao PDF - específico para home
  */
 async function addSignatureToPdf(
-  pdfDoc: PDFDocument,
+  pdfDoc: any, // Usar any para evitar problemas de tipo com PDFDocument
   imageData: string,
   field: FieldConfig
 ): Promise<void> {
@@ -140,6 +144,7 @@ async function addSignatureToPdf(
       height: height,
     });
   } catch (error) {
+    Logger.error("Erro ao processar assinatura no PDF:", error);
     throw new Error(
       `Falha ao processar assinatura: ${
         error instanceof Error ? error.message : "Erro desconhecido"
@@ -165,6 +170,7 @@ function dataUrlToUint8Array(dataUrl: string): Uint8Array {
     }
     return bytes;
   } catch (error) {
+    Logger.error("Erro na conversão de data URL:", error);
     throw new Error(
       "Formato de assinatura inválido: " +
         (error instanceof Error ? error.message : "Erro na conversão")

@@ -1,5 +1,6 @@
 import { PDFDocument } from "pdf-lib";
 import type { PdfCompressResult, CompressionInfo } from "~/lib/types";
+import { Logger } from "~/lib/utils/logger";
 
 /**
  * Calcula o tamanho estimado do email incluindo HTML e anexos
@@ -51,6 +52,7 @@ export const compressPdfBasic = async (
 
     return compressedBytes;
   } catch (error) {
+    Logger.error("Erro na compressão básica do PDF:", error);
     throw error;
   }
 };
@@ -89,6 +91,7 @@ export const compressPdf = async (
     };
 
     onProgress?.(compressionInfo);
+    Logger.log("Compressão PDF concluída:", compressionInfo);
 
     return {
       compressedBytes,
@@ -104,6 +107,7 @@ export const compressPdf = async (
     };
 
     onProgress?.(errorInfo);
+    Logger.error("Erro na compressão do PDF:", error);
 
     return {
       compressedBytes: pdfBytes,

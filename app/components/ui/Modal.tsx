@@ -1,13 +1,5 @@
 import React from "react";
-import type { JSX } from "react";
-
-interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title?: string;
-  children: React.ReactNode;
-  size?: "sm" | "md" | "lg" | "xl";
-}
+import type { ModalProps } from "~/lib/types";
 
 export default function Modal({
   isOpen,
@@ -15,7 +7,7 @@ export default function Modal({
   title,
   children,
   size = "md",
-}: ModalProps): JSX.Element | null {
+}: ModalProps) {
   if (!isOpen) return null;
 
   const sizeClasses = {
@@ -74,9 +66,9 @@ Modal.Footer = function ModalFooter({
   children,
   className = "",
 }: {
-  children: React.ReactNode,
-  className?: string,
-}): JSX.Element {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <div
       className={`flex justify-end p-6 border-t border-gray-200 dark:border-gray-600 gap-3 ${className}`}
