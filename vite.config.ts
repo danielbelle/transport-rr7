@@ -34,5 +34,8 @@ export default defineConfig(({ mode }) => {
         env.VALIDATION_ENABLED
       ),
     },
+    build: {
+      chunkSizeWarningLimit: 1000, // Set the limit to 1000 KB (1 MB)
+    },
   };
 });
