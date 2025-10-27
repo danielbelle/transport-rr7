@@ -1,8 +1,11 @@
 import { useNavigate } from "react-router";
-import LogoComponent from "~/components/layout/logo-component";
+import { useEffect } from "react";
+import type { LoaderFunction } from "react-router";
 import Button from "~/components/ui/Button";
 import Card from "~/components/ui/Card";
 import type { JSX } from "react";
+import { useDocumentStore } from "~/lib/stores";
+import { useNotification } from "~/lib/notification-context";
 
 interface WelcomeProps {
   title?: string;
@@ -18,6 +21,28 @@ export default function Welcome({
   onAction,
 }: WelcomeProps): JSX.Element {
   const navigate = useNavigate();
+  const { addNotification } = useNotification();
+  const { resetTemporaryState, resetToForm } = useDocumentStore();
+
+  // Função para limpar todos os dados
+  const clearAllData = () => {
+    // Limpar dados do store
+    resetTemporaryState();
+    resetToForm();
+
+    // Limpar sessionStorage
+    sessionStorage.removeItem("temp_signature");
+
+    // Limpar localStorage do store (Zustand persiste no localStorage)
+    localStorage.removeItem("document-storage");
+
+    console.log("Todos os dados foram limpos ao voltar para a página inicial");
+  };
+
+  // Executar a limpeza quando o componente montar
+  useEffect(() => {
+    clearAllData();
+  }, []);
 
   const handleAction = (): void => {
     // Chama a função personalizada se fornecida, caso contrário usa navegação padrão
@@ -76,4 +101,16 @@ export default function Welcome({
       </div>
     </main>
   );
+}
+
+// Loader opcional para garantir limpeza no servidor também
+export async function loader() {
+  // O loader é executado no servidor, mas podemos adicionar headers
+  // ou lógica adicional se necessário
+  return new Response(null, {
+    status: 200,
+    headers: {
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+    },
+  });
 }

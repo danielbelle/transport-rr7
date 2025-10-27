@@ -39,7 +39,15 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    // Garantir que começamos no passo "form"
     setCurrentStep("form");
+
+    // Limpar qualquer dado residual do sessionStorage se necessário
+    const shouldClearData = !sessionStorage.getItem("preserve_data");
+    if (shouldClearData) {
+      setFormData(initialFormData);
+      sessionStorage.removeItem("temp_signature");
+    }
   }, [setCurrentStep]);
 
   const handleFormDataChange = (data: TappFormData) => {
@@ -62,15 +70,7 @@ export default function HomePage() {
   };
 
   const handleEmailSent = () => {
-    setFormData(initialFormData);
-    sessionStorage.removeItem("temp_signature");
-
-    // ✅ NOTIFICAÇÃO DE SUCESSO
-    addNotification({
-      type: "success",
-      message: "Formulário enviado e resetado com sucesso!",
-      duration: 5000,
-    });
+    setCurrentStep("form");
   };
 
   const handleSignatureUpdate = (signatureData: string | null) => {

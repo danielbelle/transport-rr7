@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import { FileUpload } from "~/components/ui/FileUpload";
 import { FormSignature } from "~/components/ui/FormSignature";
 import { useDocumentStore } from "~/lib/stores";
@@ -21,6 +22,7 @@ export default function HomeEmailSender({
   onSignatureUpdate,
 }: HomeEmailSenderProps) {
   const { addNotification } = useNotification();
+  const navigate = useNavigate();
   const [compressionInfo, setCompressionInfo] =
     useState<CompressionInfo | null>(null);
   const [currentStep, setCurrentStep] = useState<string>("");
@@ -130,7 +132,7 @@ export default function HomeEmailSender({
       let finalPdfBytes = formPdfBytes;
       let isMerged = false;
 
-      //  garantir que uploadedFile existe e é válido
+      // garantir que uploadedFile existe e é válido
       if (uploadedFile && uploadedFile instanceof File) {
         setCurrentStep("Mesclando PDFs...");
         try {
@@ -247,6 +249,11 @@ export default function HomeEmailSender({
 
       resetAfterSuccessfulSend();
       onEmailSent?.();
+
+      // ✅ REDIRECIONAR PARA A PÁGINA INICIAL APÓS 2 SEGUNDOS
+      setTimeout(() => {
+        navigate("/");
+      }, 2000);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erro desconhecido";

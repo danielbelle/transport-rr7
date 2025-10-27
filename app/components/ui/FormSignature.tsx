@@ -9,22 +9,35 @@ export const FormSignature: React.FC<
   const { addNotification } = useNotification();
   const signatureRef = useRef<SignatureCanvas | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [isReady, setIsReady] = useState(false); // ← Novo estado para controlar se está pronto
 
   // Dimensões fixas e responsivas para o componente de assinatura
-  const signatureWidth = 500;
+  const signatureWidth = 600;
   const signatureHeight = 150;
 
   const signatureId = `signature-${field.key}`;
 
-  // Carregar assinatura existente quando o componente montar
+  // Inicializar o componente após montagem
   useEffect(() => {
-    if (initialSignature && signatureRef.current) {
+    setIsReady(true);
+
+    // Cleanup function
+    return () => {
+      if (signatureRef.current) {
+        signatureRef.current.off();
+      }
+    };
+  }, []);
+
+  // Carregar assinatura existente quando o componente montar e estiver pronto
+  useEffect(() => {
+    if (initialSignature && signatureRef.current && isReady) {
       loadInitialSignature(initialSignature);
     }
-  }, [initialSignature]);
+  }, [initialSignature, isReady]);
 
   const loadInitialSignature = (signatureData: string) => {
-    if (!signatureRef.current) return;
+    if (!signatureRef.current || !isReady) return;
 
     const img = new Image();
     img.onload = () => {
@@ -48,44 +61,76 @@ export const FormSignature: React.FC<
   };
 
   const handleSignatureEnd = () => {
-    if (!signatureRef.current) return;
+    if (!signatureRef.current || !isReady) return;
 
-    if (signatureRef.current.isEmpty()) {
-      onSignatureChange(field.key, null);
-      setIsDrawing(false);
-      return;
-    }
+    try {
+      if (signatureRef.current.isEmpty()) {
+        onSignatureChange(field.key, null);
+        setIsDrawing(false);
+        return;
+      }
 
-    const dataUrl = signatureRef.current.toDataURL();
-    onSignatureChange(field.key, dataUrl);
-    setIsDrawing(false);
-
-    // ✅ NOTIFICAÇÃO DE SUCESSO
-    addNotification({
-      type: "success",
-      message: "Assinatura salva com sucesso!",
-      duration: 3000,
-    });
-  };
-
-  const handleSignatureBegin = () => {
-    setIsDrawing(true);
-  };
-
-  const handleClearSignature = () => {
-    if (signatureRef.current) {
-      signatureRef.current.clear();
-      onSignatureChange(field.key, null);
+      const dataUrl = signatureRef.current.toDataURL();
+      onSignatureChange(field.key, dataUrl);
       setIsDrawing(false);
 
-      // ✅ NOTIFICAÇÃO DE INFORMAÇÃO
+      // ✅ NOTIFICAÇÃO DE SUCESSO
       addNotification({
-        type: "info",
-        message: "Assinatura removida",
+        type: "success",
+        message: "Assinatura salva com sucesso!",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Erro ao processar assinatura:", error);
+      addNotification({
+        type: "error",
+        message: "Erro ao salvar assinatura",
         duration: 3000,
       });
     }
   };
+
+  const handleSignatureBegin = () => {
+    if (!isReady) return;
+    setIsDrawing(true);
+  };
+
+  const handleClearSignature = () => {
+    if (signatureRef.current && isReady) {
+      try {
+        signatureRef.current.clear();
+        onSignatureChange(field.key, null);
+        setIsDrawing(false);
+
+        // ✅ NOTIFICAÇÃO DE INFORMAÇÃO
+        addNotification({
+          type: "info",
+          message: "Assinatura removida",
+          duration: 3000,
+        });
+      } catch (error) {
+        console.error("Erro ao limpar assinatura:", error);
+      }
+    }
+  };
+
+  // Se não estiver pronto, mostrar loading
+  if (!isReady) {
+    return (
+      <div className="space-y-3">
+        <label
+          htmlFor={signatureId}
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {field.label}
+          {field.required && <span className="text-red-500">*</span>}
+        </label>
+        <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-700 p-8 text-center">
+          <div className="animate-pulse">Carregando área de assinatura...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
