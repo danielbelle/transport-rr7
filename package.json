@@ -7,10 +7,8 @@
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
-    "export": "node export.mjs",
-    "tree": "git ls-files > tree.txt"
+    "vercel-build": "npm run build && npm run typecheck",
+    "export": "node export.mjs"
   },
   "dependencies": {
     "@react-router/node": "^7.9.4",

@@ -1,62 +1,58 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { CanvasPreview } from "~/components/ui/CanvasPreview";
-import { fieldConfig } from "~/utils/field-config";
-import type {
-  TextOverlay,
-  LiveImageProps,
-  FlexibleFormData,
-} from "~/utils/types";
+import { homeFieldConfig } from "~/routes/editor/utils/home-field-config";
+import type { TextOverlay, LiveImageProps, TappFormData } from "~/lib/types";
 
-export default function LiveImage({ formData }: LiveImageProps) {
+export default function HomeLiveImage({ formData }: LiveImageProps) {
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Configurações
   const imageUrl = "/samples/sample.png";
   const canvasWidth = 750;
   const canvasHeight = 750;
   const textColor = "#000000";
   const timeDebounce = 400;
 
-  // Função para criar overlay de texto (usa configurações de IMAGEM)
   function createTextOverlay(
-    field: (typeof fieldConfig)[number],
+    field: (typeof homeFieldConfig)[number],
     value: string
-  ): TextOverlay {
+  ): TextOverlay | null {
+    if (field.font === 0) return null;
+    if (field.x === 0 && field.y === 0) return null;
+
     return {
       id: field.key,
       text: value,
-      x: field.x, // Usa x da imagem
-      y: field.y, // Usa y da imagem
-      fontSize: field.font, // Usa font da imagem
+      x: field.x,
+      y: field.y,
+      fontSize: field.font,
       color: textColor,
       fieldKey: field.key,
       type: "text",
     };
   }
 
-  // Função para criar overlay de assinatura (usa configurações de IMAGEM)
   function createSignatureOverlay(
-    field: (typeof fieldConfig)[number],
+    field: (typeof homeFieldConfig)[number],
     imageData: string
-  ): TextOverlay {
+  ): TextOverlay | null {
+    if (field.x === 0 && field.y === 0) return null;
+
     return {
-      id: `${field.key}-${Date.now()}`,
+      id: `${field.key}-signature`,
       text: "",
-      x: field.x, // Usa x da imagem
-      y: field.y, // Usa y da imagem
+      x: field.x,
+      y: field.y,
       fontSize: 0,
       color: textColor,
       fieldKey: field.key,
       type: "signature",
       imageData,
-      // ADICIONAR: Usar width e height da configuração do campo
-      width: field.width || 300, // Valor padrão de fallback
-      height: field.height || 100, // Valor padrão de fallback
+      width: field.width || 300,
+      height: field.height || 100,
     };
   }
 
-  // Atualizar overlays quando formData mudar com debounce
   useEffect(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -73,20 +69,23 @@ export default function LiveImage({ formData }: LiveImageProps) {
     };
   }, [formData]);
 
-  // Atualiza todos os overlays da imagem
   function updateImageOverlays() {
-    // Converter FormData para FlexibleFormData usando type assertion
-    const flexibleFormData = formData as unknown as FlexibleFormData;
-
-    const overlays = fieldConfig
+    const overlays = homeFieldConfig
       .filter((field) => !field.hidden)
       .map((field) => {
-        const value = flexibleFormData[field.key] || "";
+        const value = formData[field.key as keyof TappFormData] || "";
 
         if (field.type === "signature") {
-          // Verificar se é uma data URL de assinatura
           if (value && value.startsWith("data:image/")) {
             return createSignatureOverlay(field, value);
+          }
+          return null;
+        }
+
+        if (field.key === "text_repete") {
+          const nomeValue = formData.text_nome || "";
+          if (nomeValue.trim()) {
+            return createTextOverlay(field, nomeValue);
           }
           return null;
         }
@@ -101,11 +100,10 @@ export default function LiveImage({ formData }: LiveImageProps) {
   return (
     <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
       <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-        Visualização da Imagem em Tempo Real
+        Seu PDF Editado em Tempo Real
       </h2>
 
       <div className="space-y-4">
-        {/* Preview da Imagem */}
         <CanvasPreview
           imageUrl={imageUrl}
           canvasWidth={canvasWidth}

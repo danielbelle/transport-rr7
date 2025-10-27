@@ -1,16 +1,14 @@
+import type { TappFormData } from "~/lib/types";
+
 /**
- * Templates de email para envio de formulários
- * @param subject Assunto do email
- * @param formData Dados do formulário preenchido
- * @param message Mensagem personalizada do email
- * @returns HTML formatado do email
+ * Templates de email específicos para a home
  */
-export const EmailTemplates = {
-  formEmail: (subject: string, formData: any, message: string) => `
+export const HomeEmailTemplates = {
+  formEmail: (subject: string, formData: TappFormData, message: string) => `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #1f2937;">${subject}</h2>
       <div style="background: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
-        <h3 style="color: #374151; margin-top: 0;">Dados do Formulário:</h3>
+        <h3 style="color: #374151; margin-top: 0;">Dados do Formulário Preenchido:</h3>
         <p style="margin: 5px 0;"><strong>Nome:</strong> ${
           formData.text_nome || "Não informado"
         }</p>
@@ -32,3 +30,19 @@ export const EmailTemplates = {
     </div>
   `,
 };
+
+/**
+ * Gera mensagem padrão específica para home
+ */
+export function generateHomeDefaultMessage(formData: TappFormData): string {
+  return `Prezados,
+
+Segue em anexo o formulário preenchido com os seguintes dados:
+
+• Nome: ${formData.text_nome || "Não informado"}
+• RG: ${formData.text_rg || "Não informado"} 
+• CPF: ${formData.text_cpf || "Não informado"}
+
+Atenciosamente,
+Sistema T-App`;
+}

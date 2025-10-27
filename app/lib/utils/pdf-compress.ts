@@ -1,11 +1,9 @@
 import { PDFDocument } from "pdf-lib";
-import type { PdfCompressResult, CompressionInfo } from "~/utils/types";
+import type { PdfCompressResult, CompressionInfo } from "~/lib/types";
+import { Logger } from "~/lib/utils/logger";
 
 /**
  * Calcula o tamanho estimado do email incluindo HTML e anexos
- * @param htmlContent Conteúdo HTML do email
- * @param attachments Lista de anexos do email
- * @returns Tamanho total em bytes
  */
 export const calculateEmailSize = (
   htmlContent: string,
@@ -16,18 +14,12 @@ export const calculateEmailSize = (
     return total + (attachment.content ? atob(attachment.content).length : 0);
   }, 0);
 
-  // Adicionar margem para headers e outros dados do email
-  const overhead = 1024; // ~1KB para headers e metadados
-
+  const overhead = 1024;
   return htmlSize + attachmentsSize + overhead;
 };
 
 /**
  * Verifica se o PDF precisa de compressão considerando o limite total de 15MB
- * @param pdfBytes Bytes do PDF a ser verificado
- * @param emailHtml Conteúdo HTML do email
- * @param otherAttachments Outros anexos do email
- * @returns true se precisa de compressão, false caso contrário
  */
 export const needsCompression = (
   pdfBytes: Uint8Array,
@@ -37,15 +29,13 @@ export const needsCompression = (
   const pdfSize = pdfBytes.length;
   const emailSize = calculateEmailSize(emailHtml, otherAttachments);
   const totalSize = pdfSize + emailSize;
-  const limitBytes = 15 * 1024 * 1024; // 15MB em bytes
+  const limitBytes = 15 * 1024 * 1024;
 
   return totalSize > limitBytes;
 };
 
 /**
  * Compressão básica do PDF - re-salva com otimizações
- * @param pdfBytes Bytes do PDF original
- * @returns Bytes do PDF comprimido
  */
 export const compressPdfBasic = async (
   pdfBytes: Uint8Array
@@ -53,25 +43,22 @@ export const compressPdfBasic = async (
   try {
     const pdfDoc = await PDFDocument.load(pdfBytes);
 
-    // Re-salvar com configurações otimizadas para redução de tamanho
     const compressedBytes = await pdfDoc.save({
-      useObjectStreams: true, // Agrupar objetos para compactação
-      addDefaultPage: false, // Não adicionar página extra
-      objectsPerTick: 50, // Processar menos objetos por tick para economia de memória
-      updateFieldAppearances: false, // Não atualizar aparências de campos (economiza espaço)
+      useObjectStreams: true,
+      addDefaultPage: false,
+      objectsPerTick: 50,
+      updateFieldAppearances: false,
     });
 
     return compressedBytes;
   } catch (error) {
+    Logger.error("Erro na compressão básica do PDF:", error);
     throw error;
   }
 };
 
 /**
  * Função principal de compressão de PDF com callback de progresso
- * @param pdfBytes Bytes do PDF original
- * @param onProgress Callback para informações de progresso da compressão
- * @returns Objeto com bytes comprimidos e informações da compressão
  */
 export const compressPdf = async (
   pdfBytes: Uint8Array,
@@ -79,16 +66,9 @@ export const compressPdf = async (
 ): Promise<PdfCompressResult> => {
   const originalSize = pdfBytes.length;
   let compressedBytes = pdfBytes;
-  let attempts = 0;
-  const maxAttempts = 2;
 
   try {
-    // Compressão básica
-    attempts++;
     compressedBytes = await compressPdfBasic(pdfBytes);
-
-    const basicCompressionRatio =
-      ((originalSize - compressedBytes.length) / originalSize) * 100;
 
     const finalSize = compressedBytes.length;
     const compressionRatio = ((originalSize - finalSize) / originalSize) * 100;
@@ -111,6 +91,7 @@ export const compressPdf = async (
     };
 
     onProgress?.(compressionInfo);
+    Logger.log("Compressão PDF concluída:", compressionInfo);
 
     return {
       compressedBytes,
@@ -126,8 +107,8 @@ export const compressPdf = async (
     };
 
     onProgress?.(errorInfo);
+    Logger.error("Erro na compressão do PDF:", error);
 
-    // Em caso de erro, retorna o original
     return {
       compressedBytes: pdfBytes,
       info: errorInfo,
