@@ -1,11 +1,11 @@
 import React from "react";
-import { FormField } from "./FormField";
-import type { FormData, FieldConfig } from "~/lib/types";
+import { FormField } from "~/components/ui/FormField";
+import type { TappFormData, FieldConfig } from "~/lib/types";
 
 interface FormProps {
   fields: FieldConfig[];
-  formData: FormData;
-  onFormDataChange: (data: FormData) => void;
+  formData: TappFormData;
+  onFormDataChange: (data: TappFormData) => void;
   children?: React.ReactNode;
 }
 
@@ -53,7 +53,7 @@ export default function Form({
               <FormField
                 key={field.key}
                 field={field}
-                value={formData[field.key as keyof FormData] || ""}
+                value={formData[field.key as keyof TappFormData] || ""}
                 onChange={handleFieldChange}
               />
             ))}
@@ -69,7 +69,7 @@ export default function Form({
               <FormField
                 key={field.key}
                 field={field}
-                value={formData[field.key as keyof FormData] || ""}
+                value={formData[field.key as keyof TappFormData] || ""}
                 onChange={handleFieldChange}
               />
             ))}
@@ -85,7 +85,7 @@ export default function Form({
               <FormField
                 key={field.key}
                 field={field}
-                value={formData[field.key as keyof FormData] || ""}
+                value={formData[field.key as keyof TappFormData] || ""}
                 onChange={handleFieldChange}
               />
             ))}

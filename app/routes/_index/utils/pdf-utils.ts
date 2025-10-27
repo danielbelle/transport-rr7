@@ -1,12 +1,12 @@
 import { PDFDocument, rgb } from "pdf-lib";
 import { homeFieldConfig } from "./home-field-config";
-import type { FormData, FlexibleFormData, FieldConfig } from "~/lib/types";
+import type { TappFormData, FieldConfig } from "~/lib/types";
 
 /**
  * Gera PDF editado com os dados do formulário - ESPECÍFICO para home
  */
 export async function generateHomeFormPdf(
-  formData: FormData
+  formData: TappFormData
 ): Promise<Uint8Array> {
   try {
     const templateBytes = await loadPdfTemplate();
@@ -15,13 +15,11 @@ export async function generateHomeFormPdf(
     const page = pages[0];
     const pageHeight = page.getHeight();
 
-    const flexibleFormData = formData as unknown as FlexibleFormData;
-
-    // Processar campos de texto específicos da home
+    // ✅ SIMPLIFICADO - Remove FlexibleFormData desnecessário
     homeFieldConfig.forEach((field) => {
       if (field.type === "signature") return;
 
-      const value = flexibleFormData[field.key];
+      const value = formData[field.key as keyof TappFormData];
 
       if (value && value.toString().trim() !== "") {
         // Ignorar campos com fontPdf = 0 (não aparecem no PDF)
@@ -51,7 +49,7 @@ export async function generateHomeFormPdf(
     const signaturePromises = homeFieldConfig
       .filter((field) => field.type === "signature")
       .map(async (field) => {
-        const signatureData = flexibleFormData[field.key];
+        const signatureData = formData.signature;
         if (signatureData && signatureData.startsWith("data:image/")) {
           // Ignorar assinaturas com coordenadas 0,0
           if (field.xPdf === 0 && field.yPdf === 0) return;

@@ -1,11 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { CanvasPreview } from "~/components/ui/CanvasPreview";
 import { homeFieldConfig } from "~/routes/_index/utils/home-field-config";
-import type {
-  TextOverlay,
-  LiveImageProps,
-  FlexibleFormData,
-} from "~/lib/types";
+import type { TextOverlay, LiveImageProps, TappFormData } from "~/lib/types";
 
 export default function HomeLiveImage({ formData }: LiveImageProps) {
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
@@ -74,12 +70,10 @@ export default function HomeLiveImage({ formData }: LiveImageProps) {
   }, [formData]);
 
   function updateImageOverlays() {
-    const flexibleFormData = formData as unknown as FlexibleFormData;
-
     const overlays = homeFieldConfig
       .filter((field) => !field.hidden)
       .map((field) => {
-        const value = flexibleFormData[field.key] || "";
+        const value = formData[field.key as keyof TappFormData] || "";
 
         if (field.type === "signature") {
           if (value && value.startsWith("data:image/")) {
@@ -89,7 +83,7 @@ export default function HomeLiveImage({ formData }: LiveImageProps) {
         }
 
         if (field.key === "text_repete") {
-          const nomeValue = flexibleFormData["text_nome"] || "";
+          const nomeValue = formData.text_nome || "";
           if (nomeValue.trim()) {
             return createTextOverlay(field, nomeValue);
           }

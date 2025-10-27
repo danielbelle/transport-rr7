@@ -3,12 +3,11 @@ import type { Route } from "./+types/route";
 import Form from "~/components/ui/Form";
 import HomeEmailSender from "./components/HomeEmailSender";
 import HomeLiveImage from "./components/HomeLiveImage";
-import type { FormData } from "~/lib/types";
+import type { TappFormData } from "~/lib/types";
 import { useDocumentStore } from "~/lib/stores";
-import { useForm } from "~/hooks/useForm";
 import { homeFieldConfig } from "./utils/home-field-config";
 
-const initialFormData: FormData = {
+const initialFormData: TappFormData = {
   text_nome: "",
   text_rg: "",
   text_cpf: "",
@@ -24,7 +23,7 @@ const initialFormData: FormData = {
 };
 
 export default function HomePage() {
-  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [formData, setFormData] = useState<TappFormData>(initialFormData);
   const { currentStep, setCurrentStep } = useDocumentStore();
 
   useEffect(() => {
@@ -41,7 +40,7 @@ export default function HomePage() {
     setCurrentStep("form");
   }, [setCurrentStep]);
 
-  const handleFormDataChange = (data: FormData) => {
+  const handleFormDataChange = (data: TappFormData) => {
     setFormData(data);
   };
 

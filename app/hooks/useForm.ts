@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import type { FormData, FlexibleFormData, FieldConfig } from "~/lib/types";
+import type { TappFormData, FieldConfig } from "~/lib/types";
 import { validateFormData } from "~/lib/utils";
 
-export function useForm(initialData: FormData, fieldConfig: FieldConfig[]) {
-  const [formData, setFormData] = useState<FormData>(initialData);
+export function useForm(initialData: TappFormData, fieldConfig: FieldConfig[]) {
+  const [formData, setFormData] = useState<TappFormData>(initialData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isFormComplete, setIsFormComplete] = useState(false);
 
@@ -82,7 +82,7 @@ export function useForm(initialData: FormData, fieldConfig: FieldConfig[]) {
       }));
     }
 
-    return newData as FormData;
+    return newData as TappFormData;
   };
 
   useEffect(() => {
@@ -93,7 +93,7 @@ export function useForm(initialData: FormData, fieldConfig: FieldConfig[]) {
     const isComplete = requiredFields.every((field) => {
       // Type guard para acesso seguro
       if (field in formData) {
-        const value = formData[field as keyof FormData]?.toString().trim();
+        const value = formData[field as keyof TappFormData]?.toString().trim();
         return value !== "";
       }
       return false;
@@ -103,11 +103,11 @@ export function useForm(initialData: FormData, fieldConfig: FieldConfig[]) {
   }, [formData, fieldConfig]);
 
   return {
-    formData: formData as FormData,
+    formData: formData as TappFormData,
     errors,
     isFormComplete,
     updateField,
     validateForm,
-    setFormData: (data: FormData) => setFormData(data as FlexibleFormData),
+    setFormData: (data: TappFormData) => setFormData(data as TappFormData),
   };
 }

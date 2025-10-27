@@ -6,7 +6,7 @@ import type { EmailSenderProps, CompressionInfo } from "~/lib/types";
 import {
   HomeEmailTemplates,
   generateHomeDefaultMessage,
-} from "../utils/email-utils";
+} from "~/routes/_index/utils/email-utils";
 import { homeFieldConfig } from "~/routes/_index/utils/home-field-config";
 import { validateFormData, validatePdfFile } from "~/lib/utils";
 

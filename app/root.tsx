@@ -6,14 +6,13 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-
 import type { Route } from "./+types/root";
-import "./app.css";
+import "~/app.css";
 import Header from "~/components/layout/header";
 import Footer from "~/components/layout/footer";
-import Loading from "./components/ui/Loading";
-import { NotificationProvider } from "./lib/notification-context";
-import Notification from "./components/ui/Notification";
+import Loading from "~/components/ui/Loading";
+import { NotificationProvider } from "~/lib/notification-context";
+import Notification from "~/components/ui/Notification";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },

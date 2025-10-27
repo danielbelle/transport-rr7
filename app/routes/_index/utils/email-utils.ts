@@ -1,10 +1,10 @@
-import type { FormData } from "~/lib/types";
+import type { TappFormData } from "~/lib/types";
 
 /**
  * Templates de email específicos para a home
  */
 export const HomeEmailTemplates = {
-  formEmail: (subject: string, formData: FormData, message: string) => `
+  formEmail: (subject: string, formData: TappFormData, message: string) => `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #1f2937;">${subject}</h2>
       <div style="background: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
@@ -34,7 +34,7 @@ export const HomeEmailTemplates = {
 /**
  * Gera mensagem padrão específica para home
  */
-export function generateHomeDefaultMessage(formData: FormData): string {
+export function generateHomeDefaultMessage(formData: TappFormData): string {
   return `Prezados,
 
 Segue em anexo o formulário preenchido com os seguintes dados:

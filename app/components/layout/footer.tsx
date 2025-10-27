@@ -1,4 +1,3 @@
-// app/components/layout/footer.tsx
 import type { JSX } from "react";
 import { Link } from "react-router";
 

@@ -1,5 +1,3 @@
-import React from "react";
-
 interface LoadingProps {
   variant?: "spinner" | "dots" | "progress" | "pulse";
   type?: "page" | "component" | "email" | "pdf" | "form";

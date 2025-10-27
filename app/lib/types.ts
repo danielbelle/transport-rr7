@@ -7,18 +7,17 @@ export interface BaseFieldConfig {
   hidden?: boolean;
 }
 
-export interface TextFieldConfig extends BaseFieldConfig {
-  type: "text" | "number" | "email" | "tel" | "date";
-  font: number;
-  x: number;
-  y: number;
-  fontPdf: number;
-  xPdf: number;
-  yPdf: number;
-}
+export type FieldType =
+  | "text"
+  | "number"
+  | "email"
+  | "tel"
+  | "date"
+  | "signature";
 
-export interface SignatureFieldConfig extends BaseFieldConfig {
-  type: "signature";
+export interface FieldConfig extends BaseFieldConfig {
+  type: FieldType;
+  font: number;
   x: number;
   y: number;
   width?: number;
@@ -28,9 +27,7 @@ export interface SignatureFieldConfig extends BaseFieldConfig {
   yPdf: number;
 }
 
-export type FieldConfig = TextFieldConfig | SignatureFieldConfig;
-
-export interface FormData {
+export interface TappFormData {
   text_nome: string;
   text_rg: string;
   text_cpf: string;
@@ -43,10 +40,6 @@ export interface FormData {
   text_email: string;
   text_repete: string;
   signature: string;
-}
-
-export interface FlexibleFormData extends FormData {
-  [key: string]: string;
 }
 
 export interface FormInputProps {
@@ -83,7 +76,7 @@ export interface TextOverlay {
 }
 
 export interface LiveImageProps {
-  formData: FormData;
+  formData: TappFormData;
 }
 
 export interface FileUploadProps {
@@ -94,7 +87,7 @@ export interface FileUploadProps {
 }
 
 export interface EmailSenderProps {
-  formData: FormData;
+  formData: TappFormData;
   onEmailSent?: () => void;
 }
 

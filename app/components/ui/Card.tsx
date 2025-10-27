@@ -9,15 +9,13 @@ interface CardProps {
 export default function Card({
   children,
   className = "",
-  hoverable = false,
-}: CardProps & { hoverable?: boolean }): JSX.Element {
+}: CardProps): JSX.Element {
   return (
     <div
       className={`
       bg-white dark:bg-gray-800 rounded-2xl shadow-xl 
       border border-gray-200 dark:border-gray-700 p-6
       transition-all duration-200
-      ${hoverable ? "hover:shadow-2xl hover:-translate-y-1" : ""}
       ${className}
     `}
     >

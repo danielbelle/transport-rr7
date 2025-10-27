@@ -1,4 +1,3 @@
-import React from "react";
 import { useNotification } from "~/lib/notification-context";
 
 // Componente de notificação individual

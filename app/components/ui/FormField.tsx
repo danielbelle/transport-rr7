@@ -1,5 +1,5 @@
 import type { FieldConfig } from "~/lib/types";
-import { FormInput } from "./Input";
+import { FormInput } from "~/components/ui/FormInput";
 
 interface FormFieldProps {
   field: FieldConfig;
