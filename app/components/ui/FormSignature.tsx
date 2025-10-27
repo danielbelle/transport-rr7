@@ -1,14 +1,12 @@
 import React, { useRef, useState, useEffect } from "react";
+import SignatureCanvas from "react-signature-canvas";
 import type { FormSignatureProps } from "~/lib/types";
-import { LazySignatureCanvas } from "../lazy/LazyComponents";
-import Loading from "./Loading";
 
 export const FormSignature: React.FC<
   FormSignatureProps & { initialSignature?: string }
 > = ({ field, onSignatureChange, initialSignature = "" }) => {
-  const signatureRef = useRef<any>(null);
+  const signatureRef = useRef<SignatureCanvas | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [isComponentLoaded, setIsComponentLoaded] = useState(false);
 
   // Dimensões fixas e responsivas para o componente de assinatura
   const signatureWidth = 500;
@@ -16,25 +14,25 @@ export const FormSignature: React.FC<
 
   const signatureId = `signature-${field.key}`;
 
-  // Efeito para carregar a assinatura inicial quando o componente estiver pronto
+  // Carregar assinatura existente quando o componente montar
   useEffect(() => {
-    if (initialSignature && signatureRef.current && isComponentLoaded) {
+    if (initialSignature && signatureRef.current) {
       loadInitialSignature(initialSignature);
     }
-  }, [initialSignature, isComponentLoaded]);
+  }, [initialSignature]);
 
   const loadInitialSignature = (signatureData: string) => {
+    if (!signatureRef.current) return;
+
     const img = new Image();
     img.onload = () => {
       try {
+        signatureRef.current?.clear();
         const canvas = signatureRef.current?.getCanvas();
         if (canvas) {
           const ctx = canvas.getContext("2d");
           if (ctx) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            // Notificar que a assinatura foi carregada
-            onSignatureChange(field.key, signatureData);
           }
         }
       } catch (error) {
@@ -48,14 +46,15 @@ export const FormSignature: React.FC<
   };
 
   const handleSignatureEnd = () => {
-    const canvas = signatureRef.current;
-    if (!canvas || canvas.isEmpty()) {
+    if (!signatureRef.current) return;
+
+    if (signatureRef.current.isEmpty()) {
       onSignatureChange(field.key, null);
       setIsDrawing(false);
       return;
     }
 
-    const dataUrl = canvas.toDataURL();
+    const dataUrl = signatureRef.current.toDataURL();
     onSignatureChange(field.key, dataUrl);
     setIsDrawing(false);
   };
@@ -71,27 +70,6 @@ export const FormSignature: React.FC<
       setIsDrawing(false);
     }
   };
-
-  // Função chamada quando o canvas está pronto
-  const handleCanvasReady = () => {
-    setIsComponentLoaded(true);
-  };
-
-  // Se o componente ainda não carregou, mostrar loading
-  if (!isComponentLoaded) {
-    return (
-      <div className="space-y-3">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          {field.label}
-          {field.required && <span className="text-red-500">*</span>}
-        </label>
-        <Loading
-          type="component"
-          message="Carregando editor de assinatura..."
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-3">
@@ -111,7 +89,7 @@ export const FormSignature: React.FC<
             minHeight: `${signatureHeight}px`,
           }}
         >
-          <LazySignatureCanvas
+          <SignatureCanvas
             ref={signatureRef}
             penColor="black"
             onBegin={handleSignatureBegin}
@@ -124,7 +102,6 @@ export const FormSignature: React.FC<
               id: signatureId,
               "aria-label": `Área de assinatura para ${field.label}`,
               "aria-describedby": `${signatureId}-description`,
-              onLoad: handleCanvasReady, // Usando onLoad do canvas nativo
             }}
           />
         </div>
