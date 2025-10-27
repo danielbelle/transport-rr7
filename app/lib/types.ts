@@ -11,9 +11,9 @@ export interface BaseFieldConfig {
   placeholder: string;
   required: boolean;
   hidden?: boolean;
+  transformValue?: (value: string) => string;
 }
 
-// Namespaces para melhor organização
 export namespace AppTypes {
   export type FieldType =
     | "text"
@@ -151,7 +151,6 @@ export namespace DataTypes {
   }
 }
 
-// Aliases para compatibilidade com código existente
 export type FieldConfig = AppTypes.FieldConfig;
 export type TappFormData = AppTypes.TappFormData;
 export type FieldType = AppTypes.FieldType;

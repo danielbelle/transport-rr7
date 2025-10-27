@@ -58,11 +58,11 @@ export const homeFieldConfig: FieldConfig[] = [
     required: true,
   }),
 
-  FieldFactories.text({
+  FieldFactories.semester({
     key: "text_semestre",
     name: "text_semestre",
     label: "Semestre",
-    placeholder: "Semestre atual",
+    placeholder: "Digite o número (ex: 1, 2, 10) - vira 1°, 2°, 10°",
     font: 12,
     x: 268,
     y: 283,
@@ -86,11 +86,11 @@ export const homeFieldConfig: FieldConfig[] = [
     required: true,
   }),
 
-  FieldFactories.text({
+  FieldFactories.month({
     key: "text_mes",
     name: "text_mes",
     label: "Mês",
-    placeholder: "Mês de referência",
+    placeholder: "Digite 1-12 (vira janeiro, fevereiro...) ou nome do mês",
     font: 9,
     x: 360,
     y: 430,
@@ -128,7 +128,6 @@ export const homeFieldConfig: FieldConfig[] = [
     required: true,
   }),
 
-  // Campo email sem coordenadas x,y (apenas dado)
   FieldFactories.hidden({
     key: "text_email",
     name: "text_email",
@@ -137,7 +136,6 @@ export const homeFieldConfig: FieldConfig[] = [
     required: true,
   }),
 
-  // Campo de assinatura
   FieldFactories.signature({
     key: "signature",
     name: "signature",
@@ -147,14 +145,13 @@ export const homeFieldConfig: FieldConfig[] = [
     x: 290,
     y: 530,
     fontPdf: 12,
-    xPdf: 250,
+    xPdf: 200,
     yPdf: 420,
     width: 240,
     height: 50,
     required: true,
   }),
 
-  // Campo oculto para nome da assinatura (automático)
   FieldFactories.text({
     key: "text_repete",
     name: "text_repete",

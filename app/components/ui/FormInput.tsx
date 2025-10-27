@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useState } from "react";
 import type { FormInputProps } from "~/lib/types";
 
 export const FormInput = memo(function FormInput({
@@ -15,7 +15,8 @@ export const FormInput = memo(function FormInput({
   className = "",
   error,
 }: FormInputProps) {
-  // Determinar configurações finais
+  const [isFocused, setIsFocused] = useState(false);
+
   const finalType =
     field?.type === "number"
       ? "number"
@@ -31,7 +32,28 @@ export const FormInput = memo(function FormInput({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fieldKey = field?.key || name || id || "unknown";
-    onChange(fieldKey, e.target.value);
+    const newValue = e.target.value;
+
+    // Durante a digitação, NÃO aplicamos transformações
+    // Apenas passamos o valor diretamente
+    onChange(fieldKey, newValue);
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const fieldKey = field?.key || name || id || "unknown";
+    let newValue = e.target.value;
+
+    // Aplica transformação apenas quando o campo perde o foco
+    if (field?.transformValue && newValue.trim() !== "") {
+      newValue = field.transformValue(newValue);
+      onChange(fieldKey, newValue);
+    }
+
+    setIsFocused(false);
+  };
+
+  const handleFocus = () => {
+    setIsFocused(true);
   };
 
   return (
@@ -52,6 +74,8 @@ export const FormInput = memo(function FormInput({
         name={finalName}
         value={value}
         onChange={handleChange}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
         placeholder={finalPlaceholder}
         disabled={disabled}
         className={`
