@@ -1,10 +1,12 @@
 import React, { useRef, useState, useEffect } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import type { FormSignatureProps } from "~/lib/types";
+import { useNotification } from "~/lib/notification-context";
 
 export const FormSignature: React.FC<
   FormSignatureProps & { initialSignature?: string }
 > = ({ field, onSignatureChange, initialSignature = "" }) => {
+  const { addNotification } = useNotification();
   const signatureRef = useRef<SignatureCanvas | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
 
@@ -57,6 +59,13 @@ export const FormSignature: React.FC<
     const dataUrl = signatureRef.current.toDataURL();
     onSignatureChange(field.key, dataUrl);
     setIsDrawing(false);
+
+    // ✅ NOTIFICAÇÃO DE SUCESSO
+    addNotification({
+      type: "success",
+      message: "Assinatura salva com sucesso!",
+      duration: 3000,
+    });
   };
 
   const handleSignatureBegin = () => {
@@ -68,6 +77,13 @@ export const FormSignature: React.FC<
       signatureRef.current.clear();
       onSignatureChange(field.key, null);
       setIsDrawing(false);
+
+      // ✅ NOTIFICAÇÃO DE INFORMAÇÃO
+      addNotification({
+        type: "info",
+        message: "Assinatura removida",
+        duration: 3000,
+      });
     }
   };
 

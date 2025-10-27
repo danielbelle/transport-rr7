@@ -6,6 +6,7 @@ import HomeLiveImage from "./components/HomeLiveImage";
 import type { TappFormData } from "~/lib/types";
 import { useDocumentStore } from "~/lib/stores";
 import { homeFieldConfig } from "./utils/home-field-config";
+import { useNotification } from "~/lib/notification-context";
 
 const initialFormData: TappFormData = {
   text_nome: "",
@@ -23,6 +24,7 @@ const initialFormData: TappFormData = {
 };
 
 export default function HomePage() {
+  const { addNotification } = useNotification();
   const [formData, setFormData] = useState<TappFormData>(initialFormData);
   const { currentStep, setCurrentStep } = useDocumentStore();
 
@@ -50,11 +52,25 @@ export default function HomePage() {
       signature: "",
     }));
     sessionStorage.removeItem("temp_signature");
+
+    // ✅ NOTIFICAÇÃO DE INFORMAÇÃO
+    addNotification({
+      type: "info",
+      message: "Assinatura removida",
+      duration: 3000,
+    });
   };
 
   const handleEmailSent = () => {
     setFormData(initialFormData);
     sessionStorage.removeItem("temp_signature");
+
+    // ✅ NOTIFICAÇÃO DE SUCESSO
+    addNotification({
+      type: "success",
+      message: "Formulário enviado e resetado com sucesso!",
+      duration: 5000,
+    });
   };
 
   const handleSignatureUpdate = (signatureData: string | null) => {
@@ -80,10 +96,10 @@ export default function HomePage() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Editor Multiplataforma
+            Editor de Auxílio Transporte
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Preencha o formulário e veja PDF e Imagem atualizarem em tempo real
+            Preencha o formulário e gere seu documento automaticamente.
           </p>
         </div>
 
@@ -132,11 +148,11 @@ export default function HomePage() {
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Editor Multiplataforma - T-App" },
+    { title: "Editor de Auxílio Transporte" },
     {
       name: "description",
       content:
-        "Preencha formulários e veja PDF e Imagem atualizarem em tempo real",
+        "Preencha o formulário, que seu documento será gerado automaticamente.",
     },
   ];
 }

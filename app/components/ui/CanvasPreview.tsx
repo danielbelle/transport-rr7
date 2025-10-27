@@ -71,11 +71,7 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = React.memo(
     }, [textOverlays, isBackgroundLoaded, drawCanvas]);
 
     return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Preview da Imagem com Texto:
-        </h3>
-
+      <div className="space-y-4 pt-6">
         <div className="relative border-2 border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 p-4">
           <canvas
             ref={canvasRef}

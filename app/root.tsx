@@ -68,7 +68,7 @@ export function HydrateFallback() {
         <Loading
           type="page"
           title="Carregando Sistema"
-          message="Inicializando o editor multiplataforma..."
+          message="Inicializando o editor do Auxílio Transporte..."
           overlay
         />
       </main>

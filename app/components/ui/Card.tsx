@@ -1,4 +1,3 @@
-import React from "react";
 import type { CardProps } from "~/lib/types";
 
 export default function Card({ children, className = "" }: CardProps) {

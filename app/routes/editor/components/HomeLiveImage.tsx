@@ -100,7 +100,7 @@ export default function HomeLiveImage({ formData }: LiveImageProps) {
   return (
     <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
       <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-        Visualização da Imagem em Tempo Real
+        Seu PDF Editado em Tempo Real
       </h2>
 
       <div className="space-y-4">

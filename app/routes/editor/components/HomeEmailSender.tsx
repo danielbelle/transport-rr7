@@ -9,6 +9,7 @@ import {
 } from "~/routes/editor/utils/email-utils";
 import { homeFieldConfig } from "~/routes/editor/utils/home-field-config";
 import { validateFormData, validatePdfFile } from "~/lib/utils";
+import { useNotification } from "~/lib/notification-context";
 
 interface HomeEmailSenderProps extends EmailSenderProps {
   onSignatureUpdate?: (signatureData: string | null) => void;
@@ -19,6 +20,7 @@ export default function HomeEmailSender({
   onEmailSent,
   onSignatureUpdate,
 }: HomeEmailSenderProps) {
+  const { addNotification } = useNotification();
   const [compressionInfo, setCompressionInfo] =
     useState<CompressionInfo | null>(null);
   const [currentStep, setCurrentStep] = useState<string>("");
@@ -72,7 +74,12 @@ export default function HomeEmailSender({
       });
 
       if (!result.success) {
-        alert(result.errors.join(", "));
+        // ✅ NOTIFICAÇÃO DE ERRO
+        addNotification({
+          type: "error",
+          message: result.errors.join(", "),
+          duration: 5000,
+        });
         return;
       }
     }
@@ -231,13 +238,25 @@ export default function HomeEmailSender({
         throw new Error(result.error || "Erro ao enviar email");
       }
 
-      alert("Email enviado com sucesso!");
+      // ✅ NOTIFICAÇÃO DE SUCESSO
+      addNotification({
+        type: "success",
+        message: "Email enviado com sucesso!",
+        duration: 5000,
+      });
+
       resetAfterSuccessfulSend();
       onEmailSent?.();
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erro desconhecido";
-      alert(`Erro: ${errorMessage}`);
+
+      // ✅ NOTIFICAÇÃO DE ERRO
+      addNotification({
+        type: "error",
+        message: `Erro ao enviar email: ${errorMessage}`,
+        duration: 7000,
+      });
     } finally {
       setIsSendingEmail(false);
       setCurrentStep("");
@@ -254,7 +273,7 @@ export default function HomeEmailSender({
   return (
     <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
       <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-        Enviar Documento por Email
+        Enviar Documentos por Email
       </h2>
 
       <form onSubmit={handleSendEmail} className="space-y-6">
@@ -306,7 +325,7 @@ export default function HomeEmailSender({
           onClick={() => setGlobalCurrentStep("form")}
           className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-md font-medium transition-colors"
         >
-          Voltar ao Formulário (Manter Anexo)
+          Voltar ao Formulário
         </button>
       </div>
     </div>

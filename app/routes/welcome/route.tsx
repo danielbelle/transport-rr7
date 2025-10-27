@@ -12,8 +12,8 @@ interface WelcomeProps {
 }
 
 export default function Welcome({
-  title = "Editor Multiplataforma",
-  subtitle = "Preencha formulários e veja PDF e Imagem atualizarem em tempo real",
+  title = "Editor de Auxílio Transporte",
+  subtitle = "Preencha o formulário, que seu documento será gerado automaticamente.",
   actionButton = "Começar Agora",
   onAction,
 }: WelcomeProps): JSX.Element {
@@ -29,10 +29,9 @@ export default function Welcome({
   };
 
   return (
-    <main className="flex items-center justify-center pt-10 pb-4 min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <main className="flex items-center justify-center pt-7 pb-4 min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="flex-1 flex flex-col items-center gap-12 max-w-4xl mx-auto px-4">
         <header className="flex flex-col items-center gap-6">
-          <LogoComponent className="w-[300px] max-w-[80vw]" />
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-3">
               {title}
@@ -53,8 +52,7 @@ export default function Welcome({
                 Começar Edição
               </h2>
               <p className="text-gray-600 dark:text-gray-300">
-                Acesse o editor para preencher formulários e visualizar em tempo
-                real
+                Acesse o editor para preencher seu auxílio transporte
               </p>
             </div>
 
@@ -72,15 +70,8 @@ export default function Welcome({
 
         <div className="text-center space-y-2">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Sistema para edição de documentos multiplataforma
+            Sistema para edição de documentos de auxílio transporte.
           </p>
-          <div className="flex items-center justify-center gap-4 text-xs text-gray-400 dark:text-gray-500">
-            <span>✨ Interface intuitiva</span>
-            <span>•</span>
-            <span>🎨 Design responsivo</span>
-            <span>•</span>
-            <span>🌙 Modo escuro</span>
-          </div>
         </div>
       </div>
     </main>

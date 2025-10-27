@@ -2,13 +2,15 @@ import { useState, useRef } from "react";
 import type { FileUploadProps } from "~/lib/types";
 import { validatePdfFile } from "~/lib/utils";
 import { Formatters } from "~/lib/utils/formatters";
+import { useNotification } from "~/lib/notification-context";
 
 export function FileUpload({
   onFileSelect,
   accept = ".pdf",
   label = "Selecionar Arquivo",
-  required = false,
+  required = true,
 }: FileUploadProps) {
+  const { addNotification } = useNotification();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -26,7 +28,13 @@ export function FileUpload({
       });
 
       if (!validationResult.success) {
-        alert(validationResult.errors.join(", "));
+        // ✅ NOTIFICAÇÃO DE ERRO
+        addNotification({
+          type: "error",
+          message: validationResult.errors.join(", "),
+          duration: 5000,
+        });
+
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
@@ -35,6 +43,13 @@ export function FileUpload({
 
       setSelectedFile(file);
       onFileSelect(file);
+
+      // ✅ NOTIFICAÇÃO DE SUCESSO
+      addNotification({
+        type: "success",
+        message: `Arquivo "${file.name}" selecionado com sucesso!`,
+        duration: 3000,
+      });
     } else {
       setSelectedFile(null);
       onFileSelect(null);
@@ -42,6 +57,15 @@ export function FileUpload({
   };
 
   const handleRemoveFile = () => {
+    if (selectedFile) {
+      // ✅ NOTIFICAÇÃO DE INFORMAÇÃO
+      addNotification({
+        type: "info",
+        message: `Arquivo "${selectedFile.name}" removido`,
+        duration: 3000,
+      });
+    }
+
     setSelectedFile(null);
     onFileSelect(null);
     if (fileInputRef.current) {
