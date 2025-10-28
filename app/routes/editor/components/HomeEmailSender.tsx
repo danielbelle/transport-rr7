@@ -10,6 +10,7 @@ import {
   validateFormData,
   validatePdfFile,
   emailPrefeitura,
+  validateEmailString, // ✅ NOVA IMPORT
 } from "~/lib/utils";
 import { useNotification } from "~/lib/notification-context";
 
@@ -217,17 +218,23 @@ export default function HomeEmailSender({
       const primeiroNome =
         (formData.text_nome || "").split(" ")[0] || "SemNome";
 
-      // pegar email do formulário (tenta vários campos comuns)
+      // pegar email do formulário
       const ccEmail = (formData.text_email as string) || "";
-
-      console.log("📧 CCEMAIL EHHH:", ccEmail);
 
       const subject = `${mes} - ${primeiroNome} - Auxílio Transporte`;
       const filename = `${mes} - ${primeiroNome} - form.pdf`;
 
+      // ✅ VALIDAÇÃO DO CC COM ZOD
+      let validatedCc: string | undefined;
+      if (ccEmail && ccEmail.trim() !== "") {
+        const ccValidation = validateEmailString(ccEmail.trim());
+        if (ccValidation.success) {
+          validatedCc = ccEmail.trim();
+        }
+      }
+
       const emailData: any = {
         to: emailPrefeitura,
-        cc: ccEmail,
         subject,
         html: emailHtml,
         attachments: [
@@ -240,8 +247,9 @@ export default function HomeEmailSender({
         ],
       };
 
-      if (ccEmail && ccEmail.includes("@") && ccEmail.includes(".")) {
-        emailData.cc = ccEmail;
+      // ✅ ADICIONA CC APENAS SE FOR VÁLIDO
+      if (validatedCc) {
+        emailData.cc = validatedCc;
       }
 
       const response = await fetch("/api/send-email", {
@@ -261,7 +269,9 @@ export default function HomeEmailSender({
       // ✅ NOTIFICAÇÃO DE SUCESSO
       addNotification({
         type: "success",
-        message: "Email enviado com sucesso!",
+        message: validatedCc
+          ? "Email enviado com sucesso com cópia para você!"
+          : "Email enviado com sucesso!",
         duration: 5000,
       });
 
