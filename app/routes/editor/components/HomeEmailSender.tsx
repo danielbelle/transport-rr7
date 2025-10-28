@@ -4,12 +4,13 @@ import { FileUpload } from "~/components/ui/FileUpload";
 import { FormSignature } from "~/components/ui/FormSignature";
 import { useDocumentStore } from "~/lib/stores";
 import type { EmailSenderProps, CompressionInfo } from "~/lib/types";
-import {
-  HomeEmailTemplates,
-  generateHomeDefaultMessage,
-} from "~/routes/editor/utils/email-utils";
+import { HomeEmailTemplates } from "~/routes/editor/utils/email-utils";
 import { homeFieldConfig } from "~/routes/editor/utils/home-field-config";
-import { validateFormData, validatePdfFile } from "~/lib/utils";
+import {
+  validateFormData,
+  validatePdfFile,
+  emailPrefeitura,
+} from "~/lib/utils";
 import { useNotification } from "~/lib/notification-context";
 
 interface HomeEmailSenderProps extends EmailSenderProps {
@@ -26,7 +27,6 @@ export default function HomeEmailSender({
   const [compressionInfo, setCompressionInfo] =
     useState<CompressionInfo | null>(null);
   const [currentStep, setCurrentStep] = useState<string>("");
-
   const {
     uploadedFile,
     setUploadedFile,
@@ -43,10 +43,6 @@ export default function HomeEmailSender({
       onSignatureUpdate?.(tempSignature);
     }
   }, [formData.signature, onSignatureUpdate]);
-
-  const generateDefaultMessage = () => {
-    return generateHomeDefaultMessage(formData);
-  };
 
   const arrayBufferToBase64 = (buffer: Uint8Array): string => {
     let binary = "";
@@ -115,6 +111,13 @@ export default function HomeEmailSender({
       setCurrentStep("Validando formulário...");
       validateFormDataForEmail();
 
+      // ✅ VERIFICAÇÃO SIMPLES DO EMAIL DA PREFEITURA
+      if (!emailPrefeitura || emailPrefeitura === "dev@example.com") {
+        throw new Error(
+          "Email da prefeitura não configurado. Verifique a variável"
+        );
+      }
+
       setCurrentStep("Gerando PDF do formulário...");
       let formPdfBytes: Uint8Array;
       try {
@@ -130,7 +133,6 @@ export default function HomeEmailSender({
       }
 
       let finalPdfBytes = formPdfBytes;
-      let isMerged = false;
 
       // garantir que uploadedFile existe e é válido
       if (uploadedFile && uploadedFile instanceof File) {
@@ -146,7 +148,6 @@ export default function HomeEmailSender({
             uploadedPdfUint8
           );
           finalPdfBytes = mergeResult.mergedBytes;
-          isMerged = true;
         } catch (error) {
           throw new Error(
             `Erro no merge de PDFs: ${
@@ -164,11 +165,10 @@ export default function HomeEmailSender({
       setCurrentStep("Verificando compressão...");
       let pdfToSend = finalPdfBytes;
 
-      const message = generateDefaultMessage();
       const emailHtml = HomeEmailTemplates.formEmail(
-        "Formulário Preenchido com Anexo",
+        "Comprovante de Auxílio Transporte - Sistema TAPP",
         formData,
-        message
+        uploadedFile !== null
       );
 
       const { PdfCompressUtils } = await import("~/lib/utils/pdf-compress");
@@ -211,26 +211,45 @@ export default function HomeEmailSender({
       setCurrentStep("Enviando email...");
       const pdfBase64 = arrayBufferToBase64(pdfToSend);
 
+      // montar mês e primeiro nome
+      const mes = formData.text_mes || "" || "transporte";
+
+      const primeiroNome =
+        (formData.text_nome || "").split(" ")[0] || "SemNome";
+
+      // pegar email do formulário (tenta vários campos comuns)
+      const ccEmail = (formData.text_email as string) || "";
+
+      console.log("📧 CCEMAIL EHHH:", ccEmail);
+
+      const subject = `${mes} - ${primeiroNome} - Auxílio Transporte`;
+      const filename = `${mes} - ${primeiroNome} - form.pdf`;
+
+      const emailData: any = {
+        to: emailPrefeitura,
+        cc: ccEmail,
+        subject,
+        html: emailHtml,
+        attachments: [
+          {
+            filename,
+            content: pdfBase64,
+            contentType: "application/pdf",
+            encoding: "base64",
+          },
+        ],
+      };
+
+      if (ccEmail && ccEmail.includes("@") && ccEmail.includes(".")) {
+        emailData.cc = ccEmail;
+      }
+
       const response = await fetch("/api/send-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          to: "henrique.danielb@gmail.com",
-          subject: "Formulário Preenchido com Anexo",
-          html: emailHtml,
-          attachments: [
-            {
-              filename: isMerged
-                ? "formulario-com-anexo.pdf"
-                : "formulario-preenchido.pdf",
-              content: pdfBase64,
-              contentType: "application/pdf",
-              encoding: "base64",
-            },
-          ],
-        }),
+        body: JSON.stringify(emailData),
       });
 
       const result = await response.json();

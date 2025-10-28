@@ -69,13 +69,6 @@ export const FormSignature: React.FC<
       const dataUrl = signatureRef.current.toDataURL();
       onSignatureChange(field.key, dataUrl);
       setIsDrawing(false);
-
-      // ✅ NOTIFICAÇÃO DE SUCESSO
-      addNotification({
-        type: "success",
-        message: "Assinatura salva com sucesso!",
-        duration: 3000,
-      });
     } catch (error) {
       addNotification({
         type: "error",
