@@ -261,12 +261,12 @@ export default function HomeEmailSender({
       });
 
       const result = await response.json();
-
+      
       if (!response.ok) {
-        throw new Error(result.error || "Erro ao enviar email");
+        throw new Error(result.error || "Erro ao enviar email via SMTP");
       }
 
-      // ✅ NOTIFICAÇÃO DE SUCESSO
+      // ✅ NOTIFICAÇÃO DE SUCESSO (mantido igual)
       addNotification({
         type: "success",
         message: validatedCc
@@ -274,7 +274,6 @@ export default function HomeEmailSender({
           : "Email enviado com sucesso!",
         duration: 5000,
       });
-
       resetAfterSuccessfulSend();
       onEmailSent?.();
 

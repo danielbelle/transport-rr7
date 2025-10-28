@@ -1,7 +1,12 @@
 import { z } from "zod";
 
 const envSchema = z.object({
-  RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY é obrigatória"),
+  SMTP_HOST: z.string().min(1, "SMTP_HOST é obrigatório"),
+  SMTP_PORT: z.string().transform((val) => parseInt(val, 10)),
+  SMTP_USER: z.string().min(1, "SMTP_USER é obrigatório"),
+  SMTP_PASS: z.string().min(1, "SMTP_PASS é obrigatório"),
+  SMTP_FROM: z.string().min(1, "SMTP_FROM é obrigatório"),
+
   EMAIL_PREFERITO: z.email("EMAIL_PREFERITO deve ser um email válido"),
   NODE_ENV: z
     .enum(["development", "production", "test"])
@@ -16,20 +21,28 @@ export type Env = z.infer<typeof envSchema>;
 
 export function getEnv(): Env {
   if (typeof window !== "undefined") {
-    // ✅ CLIENTE: Mantém como estava, mas adiciona o email da prefeitura
+    // ✅ CLIENTE: Mantém apenas o email da prefeitura
     return {
-      RESEND_API_KEY: "",
-      EMAIL_PREFERITO: import.meta.env.VITE_EMAIL_PREFERITO, // ✅ Email da prefeitura no cliente
+      SMTP_HOST: "",
+      SMTP_PORT: 587,
+      SMTP_USER: "",
+      SMTP_PASS: "",
+      SMTP_FROM: "",
+      EMAIL_PREFERITO: import.meta.env.VITE_EMAIL_PREFERITO,
       NODE_ENV: import.meta.env.MODE as Env["NODE_ENV"],
       VALIDATION_ENABLED: import.meta.env.VITE_VALIDATION_ENABLED === "true",
     };
   }
 
-  // ✅ SERVIDOR: Mantém como estava, mas adiciona o email da prefeitura
+  // ✅ SERVIDOR: Carrega todas as variáveis SMTP
   try {
     const envVars = {
-      RESEND_API_KEY: process.env.RESEND_API_KEY,
-      EMAIL_PREFERITO: process.env.EMAIL_PREFERITO, // ✅ Email da prefeitura no servidor
+      SMTP_HOST: process.env.SMTP_HOST,
+      SMTP_PORT: process.env.SMTP_PORT,
+      SMTP_USER: process.env.SMTP_USER,
+      SMTP_PASS: process.env.SMTP_PASS,
+      SMTP_FROM: process.env.SMTP_FROM,
+      EMAIL_PREFERITO: process.env.EMAIL_PREFERITO,
       NODE_ENV: process.env.NODE_ENV,
       VALIDATION_ENABLED: process.env.VALIDATION_ENABLED,
     };
@@ -55,3 +68,12 @@ export const isProduction = env.NODE_ENV === "production";
 export const isDevelopment = env.NODE_ENV === "development";
 export const isValidationEnabled = env.VALIDATION_ENABLED;
 export const emailPrefeitura = env.EMAIL_PREFERITO;
+
+// 🔄 NOVOS: Exportações SMTP
+export const smtpConfig = {
+  host: env.SMTP_HOST,
+  port: env.SMTP_PORT,
+  user: env.SMTP_USER,
+  pass: env.SMTP_PASS,
+  from: env.SMTP_FROM,
+};
