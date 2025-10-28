@@ -34,8 +34,6 @@ export default function Welcome({
 
     // Limpar localStorage do store (Zustand persiste no localStorage)
     localStorage.removeItem("document-storage");
-
-    console.log("Todos os dados foram limpos ao voltar para a página inicial");
   };
 
   // Executar a limpeza quando o componente montar

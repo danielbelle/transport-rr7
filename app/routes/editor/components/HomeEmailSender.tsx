@@ -156,7 +156,6 @@ export default function HomeEmailSender({
         }
       } else if (uploadedFile) {
         // Caso uploadedFile existe mas não é um File válido
-        console.warn("UploadedFile inválido:", uploadedFile);
         throw new Error(
           "O arquivo anexado é inválido. Por favor, selecione novamente."
         );
