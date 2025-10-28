@@ -33,13 +33,14 @@ export const formDataSchema = z.object({
   text_mes: z.string().min(1, "Mês é obrigatório"),
   text_dias: z.string().min(1, "Dias são obrigatórios"),
   text_cidade: z.string().min(1, "Cidade é obrigatória"),
-  text_email: z.string().email("Email inválido"),
+  text_email: z.email("Email inválido"),
   text_repete: z.string().optional(),
   signature: z.string().min(1, "Assinatura é obrigatória"),
 });
 
 export const emailSchema = z.object({
-  to: z.string().email("Destinatário inválido"),
+  to: z.email("Destinatário inválido"),
+  cc: z.email("Email em cópia inválido").optional().or(z.literal("")),
   subject: z.string().min(1, "Assunto é obrigatório"),
   html: z.string().min(1, "Conteúdo HTML é obrigatório"),
   attachments: z
@@ -60,6 +61,9 @@ export const pdfFileSchema = z.object({
   type: z.literal("application/pdf"),
 });
 
+// ✅ NOVO: Schema específico para validação de email individual
+export const emailStringSchema = z.email("Email inválido");
+
 // Funções de validação
 export const validateFormData = (data: unknown) =>
   validateWithZod(formDataSchema, data);
@@ -69,3 +73,7 @@ export const validateEmailData = (data: unknown) =>
 
 export const validatePdfFile = (data: unknown) =>
   validateWithZod(pdfFileSchema, data);
+
+// ✅ NOVO: Função para validar email individual
+export const validateEmailString = (email: string) =>
+  validateWithZod(emailStringSchema, email);

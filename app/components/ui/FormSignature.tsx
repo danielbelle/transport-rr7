@@ -50,13 +50,9 @@ export const FormSignature: React.FC<
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           }
         }
-      } catch (error) {
-        console.error("Erro ao carregar assinatura inicial:", error);
-      }
+      } catch (error) {}
     };
-    img.onerror = () => {
-      console.error("Erro ao carregar imagem da assinatura");
-    };
+    img.onerror = () => {};
     img.src = signatureData;
   };
 
@@ -73,15 +69,7 @@ export const FormSignature: React.FC<
       const dataUrl = signatureRef.current.toDataURL();
       onSignatureChange(field.key, dataUrl);
       setIsDrawing(false);
-
-      // ✅ NOTIFICAÇÃO DE SUCESSO
-      addNotification({
-        type: "success",
-        message: "Assinatura salva com sucesso!",
-        duration: 3000,
-      });
     } catch (error) {
-      console.error("Erro ao processar assinatura:", error);
       addNotification({
         type: "error",
         message: "Erro ao salvar assinatura",
@@ -108,9 +96,7 @@ export const FormSignature: React.FC<
           message: "Assinatura removida",
           duration: 3000,
         });
-      } catch (error) {
-        console.error("Erro ao limpar assinatura:", error);
-      }
+      } catch (error) {}
     }
   };
 

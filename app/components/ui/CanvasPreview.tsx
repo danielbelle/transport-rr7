@@ -50,9 +50,7 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = React.memo(
             const height = overlay.height || 100;
             ctx.drawImage(signatureImg, overlay.x, overlay.y, width, height);
           };
-          signatureImg.onerror = () => {
-            console.error("Erro ao carregar assinatura no preview");
-          };
+          signatureImg.onerror = () => {};
           signatureImg.src = overlay.imageData;
         } else if (overlay.text && overlay.text.trim() !== "") {
           // Desenhar texto normal

@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router";
 import { useEffect } from "react";
-import type { LoaderFunction } from "react-router";
 import Button from "~/components/ui/Button";
 import Card from "~/components/ui/Card";
 import type { JSX } from "react";
@@ -35,8 +34,6 @@ export default function Welcome({
 
     // Limpar localStorage do store (Zustand persiste no localStorage)
     localStorage.removeItem("document-storage");
-
-    console.log("Todos os dados foram limpos ao voltar para a página inicial");
   };
 
   // Executar a limpeza quando o componente montar

@@ -1,7 +1,13 @@
 import { redirect } from "react-router";
-import { type Route } from ".rr/routes/catch-all/+types/route";
 
-export async function loader({ request }: Route.LoaderArgs) {
+interface Route {
+  LoaderArgs: {
+    request: Request;
+  };
+  MetaArgs: {};
+}
+
+export async function loader({ request }: Route["LoaderArgs"]) {
   const url = new URL(request.url);
 
   if (url.pathname.includes(".well-known/appspecific/com.chrome.devtools")) {
@@ -11,7 +17,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   return redirect("/");
 }
 
-export function meta({}: Route.MetaArgs) {
+export function meta({}: Route["MetaArgs"]) {
   return [{ title: "Page Not Found" }];
 }
 

@@ -90,7 +90,7 @@ export const homeFieldConfig: FieldConfig[] = [
     key: "text_mes",
     name: "text_mes",
     label: "Mês",
-    placeholder: "Digite 1-12 (vira janeiro, fevereiro...) ou nome do mês",
+    placeholder: "Digite 1-12",
     font: 9,
     x: 360,
     y: 430,
@@ -128,11 +128,17 @@ export const homeFieldConfig: FieldConfig[] = [
     required: true,
   }),
 
-  FieldFactories.hidden({
+  FieldFactories.email({
     key: "text_email",
     name: "text_email",
     label: "Email",
-    placeholder: "Seu email",
+    placeholder: "seu.email@exemplo.com",
+    font: 12, // Aparece na visualização ao vivo
+    x: 0, // Posição na visualização
+    y: 0, // Posição na visualização
+    fontPdf: 0, // ← ZERO para NÃO aparecer no PDF
+    xPdf: 0, // ← ZERO para NÃO aparecer no PDF
+    yPdf: 0, // ← ZERO para NÃO aparecer no PDF
     required: true,
   }),
 

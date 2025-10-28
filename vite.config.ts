@@ -29,10 +29,16 @@ export default defineConfig(({ mode }) => {
       },
     ],
     define: {
-      // Define variáveis de ambiente para o cliente RETIRAR DO CÓDIGO FINAL
-      "import.meta.env.VALIDATION_ENABLED": JSON.stringify(
-        env.VALIDATION_ENABLED
+      // Define variáveis de ambiente para o cliente
+      "import.meta.env.VITE_EMAIL_PREFERITO": JSON.stringify(
+        env.VITE_EMAIL_PREFERITO
       ),
+      "import.meta.env.VITE_VALIDATION_ENABLED": JSON.stringify(
+        env.VITE_VALIDATION_ENABLED
+      ),
+    },
+    build: {
+      chunkSizeWarningLimit: 1000,
     },
   };
 });
