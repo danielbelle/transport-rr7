@@ -90,7 +90,6 @@ export const FormSignature: React.FC<
         onSignatureChange(field.key, null);
         setIsDrawing(false);
 
-        // ✅ NOTIFICAÇÃO DE INFORMAÇÃO
         addNotification({
           type: "info",
           message: "Assinatura removida",

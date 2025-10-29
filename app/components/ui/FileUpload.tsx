@@ -28,7 +28,6 @@ export function FileUpload({
       });
 
       if (!validationResult.success) {
-        // ✅ NOTIFICAÇÃO DE ERRO
         addNotification({
           type: "error",
           message: validationResult.errors.join(", "),
@@ -44,7 +43,6 @@ export function FileUpload({
       setSelectedFile(file);
       onFileSelect(file);
 
-      // ✅ NOTIFICAÇÃO DE SUCESSO
       addNotification({
         type: "success",
         message: `Arquivo "${file.name}" selecionado com sucesso!`,
@@ -58,7 +56,6 @@ export function FileUpload({
 
   const handleRemoveFile = () => {
     if (selectedFile) {
-      // ✅ NOTIFICAÇÃO DE INFORMAÇÃO
       addNotification({
         type: "info",
         message: `Arquivo "${selectedFile.name}" removido`,

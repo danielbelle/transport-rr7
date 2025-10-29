@@ -61,7 +61,6 @@ export default function HomePage() {
     }));
     sessionStorage.removeItem("temp_signature");
 
-    // ✅ NOTIFICAÇÃO DE INFORMAÇÃO
     addNotification({
       type: "info",
       message: "Assinatura removida",

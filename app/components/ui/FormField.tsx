@@ -7,7 +7,7 @@ interface FormFieldProps {
   value: string;
   error?: string;
   onChange: (key: string, value: string) => void;
-  className?: string; // ✅ Adicionar se necessário
+  className?: string;
 }
 
 export const FormField = memo(function FormField({
@@ -15,7 +15,7 @@ export const FormField = memo(function FormField({
   value,
   error,
   onChange,
-  className = "", // ✅ Adicionar se necessário
+  className = "",
 }: FormFieldProps) {
   if (field.hidden) return null;
 

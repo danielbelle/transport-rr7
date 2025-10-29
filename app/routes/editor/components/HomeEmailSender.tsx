@@ -10,7 +10,7 @@ import {
   validateFormData,
   validatePdfFile,
   emailPrefeitura,
-  validateEmailString, // ✅ NOVA IMPORT
+  validateEmailString,
 } from "~/lib/utils";
 import { useNotification } from "~/lib/notification-context";
 
@@ -73,7 +73,6 @@ export default function HomeEmailSender({
       });
 
       if (!result.success) {
-        // ✅ NOTIFICAÇÃO DE ERRO
         addNotification({
           type: "error",
           message: result.errors.join(", "),
@@ -111,9 +110,9 @@ export default function HomeEmailSender({
     try {
       setCurrentStep("Validando formulário...");
       validateFormDataForEmail();
+      if (!emailPrefeitura) {
+        console.log("Email da prefeitura:", emailPrefeitura);
 
-      // ✅ VERIFICAÇÃO SIMPLES DO EMAIL DA PREFEITURA
-      if (!emailPrefeitura || emailPrefeitura === "dev@example.com") {
         throw new Error(
           "Email da prefeitura não configurado. Verifique a variável"
         );
@@ -224,7 +223,7 @@ export default function HomeEmailSender({
       const subject = `${mes} - ${primeiroNome} - Auxílio Transporte`;
       const filename = `${mes} - ${primeiroNome} - form.pdf`;
 
-      // ✅ VALIDAÇÃO DO CC COM ZOD
+      // VALIDAÇÃO DO CC COM ZOD
       let validatedCc: string | undefined;
       if (ccEmail && ccEmail.trim() !== "") {
         const ccValidation = validateEmailString(ccEmail.trim());
@@ -247,7 +246,6 @@ export default function HomeEmailSender({
         ],
       };
 
-      // ✅ ADICIONA CC APENAS SE FOR VÁLIDO
       if (validatedCc) {
         emailData.cc = validatedCc;
       }
@@ -261,12 +259,11 @@ export default function HomeEmailSender({
       });
 
       const result = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(result.error || "Erro ao enviar email via SMTP");
       }
 
-      // ✅ NOTIFICAÇÃO DE SUCESSO (mantido igual)
       addNotification({
         type: "success",
         message: validatedCc
@@ -277,15 +274,14 @@ export default function HomeEmailSender({
       resetAfterSuccessfulSend();
       onEmailSent?.();
 
-      // ✅ REDIRECIONAR PARA A PÁGINA INICIAL APÓS 2 SEGUNDOS
+      // REDIRECIONAR PARA A PÁGINA INICIAL APÓS 2 SEGUNDOS
       setTimeout(() => {
         navigate("/");
-      }, 2000);
+      }, 500);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erro desconhecido";
 
-      // ✅ NOTIFICAÇÃO DE ERRO
       addNotification({
         type: "error",
         message: `Erro ao enviar email: ${errorMessage}`,

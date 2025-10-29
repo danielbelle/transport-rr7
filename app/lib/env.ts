@@ -21,7 +21,6 @@ export type Env = z.infer<typeof envSchema>;
 
 export function getEnv(): Env {
   if (typeof window !== "undefined") {
-    // ✅ CLIENTE: Mantém apenas o email da prefeitura
     return {
       SMTP_HOST: "",
       SMTP_PORT: 587,
@@ -33,8 +32,7 @@ export function getEnv(): Env {
       VALIDATION_ENABLED: import.meta.env.VITE_VALIDATION_ENABLED === "true",
     };
   }
-
-  // ✅ SERVIDOR: Carrega todas as variáveis SMTP
+  // Carrega todas as variáveis SMTP
   try {
     const envVars = {
       SMTP_HOST: process.env.SMTP_HOST,
@@ -69,7 +67,7 @@ export const isDevelopment = env.NODE_ENV === "development";
 export const isValidationEnabled = env.VALIDATION_ENABLED;
 export const emailPrefeitura = env.EMAIL_PREFERITO;
 
-// 🔄 NOVOS: Exportações SMTP
+// Exportações SMTP
 export const smtpConfig = {
   host: env.SMTP_HOST,
   port: env.SMTP_PORT,

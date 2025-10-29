@@ -61,7 +61,7 @@ export const pdfFileSchema = z.object({
   type: z.literal("application/pdf"),
 });
 
-// ✅ NOVO: Schema específico para validação de email individual
+// Schema específico para validação de email individual
 export const emailStringSchema = z.email("Email inválido");
 
 // Funções de validação
@@ -74,6 +74,6 @@ export const validateEmailData = (data: unknown) =>
 export const validatePdfFile = (data: unknown) =>
   validateWithZod(pdfFileSchema, data);
 
-// ✅ NOVO: Função para validar email individual
+// Função para validar email individual
 export const validateEmailString = (email: string) =>
   validateWithZod(emailStringSchema, email);
